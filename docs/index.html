@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Manicule: a little hand pointer for your Linux desktop</title>
+<meta name="description" content="Manicule puts a cartoon hand on a stick on your GNOME desktop. It follows your mouse, taps when you click, draws when you drag and strokes the page when you scroll. For demos, screen recordings and talks. Free and open source.">
+<meta name="theme-color" content="#E5482D">
+<link rel="canonical" href="https://dabane-ghassan.github.io/manicule/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Manicule: a little hand for your Linux desktop">
+<meta property="og:description" content="A cartoon hand on a stick that points at things on your screen. Click to tap, drag to draw, scroll and it strokes the page.">
+<meta property="og:image" content="https://dabane-ghassan.github.io/manicule/assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/svg+xml" href="assets/mark.svg">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  --paper: #F6F1E7;
+  --ink: #17161B;
+  --soft: rgba(23, 22, 27, .64);
+  --red: #E5482D;
+  --cream: #FFF6E6;
+  --display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --text: "Instrument Sans", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --mono: ui-monospace, "JetBrains Mono", "DejaVu Sans Mono", Menlo, monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--paper); color: var(--ink); font: 400 17px/1.55 var(--text); -webkit-font-smoothing: antialiased; }
+body.live, body.live a, body.live button { cursor: none; }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; border-radius: 8px; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 clamp(14px, 3vw, 28px); }
+
+nav { display: flex; align-items: center; gap: 10px; height: 68px; }
+nav img { width: 34px; height: 34px; border-radius: 9px; }
+nav strong { font: 800 19px/1 var(--display); letter-spacing: -.02em; }
+nav a { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; font-weight: 500; font-size: 15px; text-decoration: none; padding: 9px 14px; border-radius: 999px; }
+nav a:hover { background: rgba(23, 22, 27, .07); }
+nav svg { width: 18px; height: 18px; fill: currentColor; }
+
+/* the stage: one big block of colour, the thing you remember */
+.stage {
+  position: relative; overflow: hidden; border-radius: clamp(22px, 3vw, 38px);
+  background: var(--red); color: var(--cream);
+  min-height: min(760px, calc(100vh - 96px)); padding: clamp(40px, 8vh, 96px) clamp(20px, 5vw, 64px) 120px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+}
+.stage::before, .stage::after { content: ""; position: absolute; border-radius: 50%; pointer-events: none; }
+.stage::before { width: 62vmax; height: 62vmax; left: -22vmax; bottom: -40vmax; background: #D93B21; }
+.stage::after { width: 40vmax; height: 40vmax; right: -14vmax; top: -24vmax; background: #EE5A3F; }
+.stage > * { position: relative; z-index: 1; }
+h1 {
+  margin: 0; max-width: 12ch;
+  font: 800 clamp(46px, 9.2vw, 124px)/.92 var(--display); letter-spacing: -.045em; text-wrap: balance;
+}
+.lede { margin: clamp(18px, 3vh, 30px) 0 0; max-width: 34ch; font-size: clamp(18px, 2vw, 22px); line-height: 1.45; color: rgba(255, 246, 230, .88); text-wrap: pretty; }
+.cmd {
+  margin-top: clamp(24px, 4vh, 40px); max-width: 100%;
+  display: flex; align-items: center; gap: 6px; padding: 7px 7px 7px 20px;
+  background: var(--ink); color: var(--cream); border-radius: 999px;
+  box-shadow: 0 14px 34px -14px rgba(60, 10, 0, .6);
+}
+.cmd code { font: 500 clamp(11.5px, 1.5vw, 14.5px)/1 var(--mono); white-space: nowrap; overflow-x: auto; scrollbar-width: none; padding: 12px 0; }
+.cmd code::before { content: "$ "; color: #FF9079; }
+.cmd button {
+  all: unset; box-sizing: border-box; flex: none; padding: 10px 18px; border-radius: 999px;
+  background: var(--cream); color: var(--ink); font: 600 14px/1 var(--text); min-width: 74px; text-align: center;
+}
+.cmd button:hover { background: #fff; }
+.cmd button:focus-visible { outline: 3px solid var(--cream); outline-offset: 2px; }
+.fine { margin: 16px 0 0; font-size: 14.5px; color: rgba(255, 246, 230, .8); max-width: 46ch; }
+
+.picker {
+  position: absolute; z-index: 2; left: 50%; bottom: 22px; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 2px; padding: 5px;
+  background: rgba(23, 22, 27, .9); border-radius: 18px;
+}
+.picker button { all: unset; box-sizing: border-box; width: 44px; height: 44px; border-radius: 13px; display: grid; place-items: center; color: var(--cream); }
+.picker button:hover { background: rgba(255, 246, 230, .14); }
+.picker button[aria-pressed="true"] { background: rgba(255, 246, 230, .24); }
+.picker button:focus-visible { outline: 3px solid var(--cream); outline-offset: 1px; }
+.picker img { width: 32px; height: 32px; pointer-events: none; transition: transform .16s cubic-bezier(.3, 1.6, .5, 1); }
+.picker button:hover img { transform: translateY(-3px) scale(1.12); }
+.picker .sep { width: 1px; height: 22px; margin: 0 6px; background: rgba(255, 246, 230, .22); }
+.picker .x { width: auto; padding: 0 14px; font: 600 13.5px/1 var(--text); white-space: nowrap; }
+@media (hover: none), (max-width: 620px) { .picker { display: none; } .stage { padding-bottom: clamp(40px, 8vh, 96px); } }
+
+.does { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 14px; }
+.does div { background: #fff; border-radius: 26px; padding: 26px 24px 28px; }
+.does img { width: 76px; height: 76px; display: block; margin: -6px 0 10px -8px; }
+h2 { margin: 0 0 4px; font: 800 24px/1.1 var(--display); letter-spacing: -.025em; }
+.does p { margin: 0; color: var(--soft); font-size: 16px; }
+@media (max-width: 900px) { .does { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 480px) { .does { grid-template-columns: minmax(0, 1fr); } }
+
+.more { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 14px; margin-top: 14px; }
+.more > div { border-radius: 26px; padding: 30px 28px; }
+.keys { background: var(--ink); color: var(--cream); }
+.keys dl { margin: 14px 0 0; display: grid; grid-template-columns: auto 1fr; gap: 10px 18px; align-items: baseline; font-size: 16px; }
+.keys dt { white-space: nowrap; }
+.keys dd { margin: 0; color: rgba(255, 246, 230, .74); }
+kbd { font: 600 13px/1 var(--text); padding: 5px 8px; border-radius: 8px; background: rgba(255, 246, 230, .14); color: var(--cream); }
+.setup { background: #fff; }
+.setup ul { margin: 14px 0 0; padding-left: 0; list-style: none; }
+.setup li { margin-bottom: 10px; color: var(--soft); }
+.setup li strong { color: var(--ink); font-weight: 600; }
+@media (max-width: 820px) { .more { grid-template-columns: minmax(0, 1fr); } }
+
+footer { margin: 44px auto 0; padding-bottom: 64px; max-width: 64ch; text-align: center; color: var(--soft); font-size: 15.5px; }
+footer p { margin: 0 0 10px; text-wrap: pretty; }
+footer a { color: var(--ink); text-decoration-color: var(--red); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+
+#stage { position: fixed; inset: 0; z-index: 40; pointer-events: none; overflow: hidden; }
+#stage[hidden] { display: none; }
+#ink { position: absolute; inset: 0; width: 100%; height: 100%; }
+#ink path { fill: none; stroke-linecap: round; stroke-linejoin: round; transition: opacity .6s ease-in; }
+.rod, .hand, .shade { position: absolute; left: 0; top: 0; will-change: transform; }
+.rod { transform-origin: 50% 0; border-radius: 999px; }
+.shade { filter: brightness(0) blur(5px); opacity: .22; }
+.rod.shade { filter: blur(3px); background: #000 !important; border-color: #000 !important; }
+.ring { position: absolute; border: 3px solid var(--cream); border-radius: 50%; background: rgba(255, 255, 255, .14); animation: ring .42s ease-out forwards; }
+@keyframes ring { from { transform: scale(.2); opacity: 1; } to { transform: scale(1); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .ring { display: none; } .picker img { transition: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <img src="assets/mark.svg" alt="">
+    <strong>Manicule</strong>
+    <a href="https://github.com/dabane-ghassan/manicule"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.4c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.36-3.88-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.78 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.39-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5z"/></svg>Source</a>
+  </nav>
+
+  <main>
+    <section class="stage">
+      <h1>A little hand for your Linux desktop.</h1>
+      <p class="lede">It points at things on your screen. Click to tap, drag to draw, scroll and it strokes the page along.</p>
+      <div class="cmd">
+        <code id="cmd">curl -fsSL https://dabane-ghassan.github.io/manicule/install.sh | sh</code>
+        <button type="button" id="copy">Copy</button>
+      </div>
+      <p class="fine">Paste it in a terminal, then log out and back in once. Version <span id="version">1.0.0</span>, free and open source, for GNOME 45 or later on any distro.</p>
+      <div class="picker" id="picker" aria-label="Try a pointer"></div>
+    </section>
+
+    <section class="does" aria-label="What it does">
+      <div><img src="assets/pointers/vermilion-point.svg" alt=""><h2>Point</h2><p>The hand follows your mouse, on a stick, from the edge of the screen.</p></div>
+      <div><img src="assets/pointers/robot-point.svg" alt=""><h2>Tap</h2><p>A click is a tap with a soft thock. Nothing underneath gets clicked.</p></div>
+      <div><img src="assets/pointers/pencil.svg" alt=""><h2>Draw</h2><p>Hold and drag to draw. Lines fade after three seconds.</p></div>
+      <div><img src="assets/pointers/lilac-open.svg" alt=""><h2>Scroll</h2><p>The page scrolls as usual, and the hand opens up and pushes it along.</p></div>
+    </section>
+
+    <section class="more">
+      <div class="keys">
+        <h2>Keys</h2>
+        <dl>
+          <dt><kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>H</kbd></dt><dd>On or off. The hand in the top bar does the same.</dd>
+          <dt><kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>X</kbd></dt><dd>Clear the drawing.</dd>
+          <dt>Hold <kbd>Alt</kbd></dt><dd>Click for real.</dd>
+          <dt><kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>C</kbd></dt><dd>Let every click through.</dd>
+          <dt><kbd>Esc</kbd></dt><dd>Put the hand away.</dd>
+        </dl>
+      </div>
+      <div class="setup">
+        <h2>Good to know</h2>
+        <ul>
+          <li><strong>It works over fullscreen.</strong> Slides, videos and HTML presentations included, and arrow keys still reach them.</li>
+          <li><strong>Twenty pointers.</strong> Hands, a magic wand, a cat paw, a laser dot, a spotlight, or your own picture.</li>
+          <li><strong>It is an app.</strong> Find Manicule in your apps, or click the little hand in the top bar.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Manicule is inspired by <a href="https://tinyhand.app">TinyHand</a>, the original hand on a stick for the Mac, made by <a href="https://github.com/nilbuild/tinyhand">Kamran Ahmed</a>. Thank you for the idea. This is an independent Linux take on it, with its own code and drawings, by <a href="https://github.com/dabane-ghassan">Ghassan Dabane</a>, under the MIT license.</p>
+    <p>A manicule is the small pointing hand readers have drawn in the margins of books since the twelfth century.</p>
+  </footer>
+</div>
+
+<div id="stage" hidden aria-hidden="true"><svg id="ink"></svg></div>
+
+<script>
+(() => {
+  const copy = document.getElementById('copy');
+  copy.addEventListener('click', () => {
+    navigator.clipboard.writeText(document.getElementById('cmd').textContent.trim()).then(() => {
+      copy.textContent = 'Copied';
+      setTimeout(() => (copy.textContent = 'Copy'), 1600);
+    });
+  });
+  fetch('https://api.github.com/repos/dabane-ghassan/manicule/releases/latest')
+    .then(r => (r.ok ? r.json() : null))
+    .then(r => { if (r && r.tag_name) document.getElementById('version').textContent = r.tag_name.replace(/^v/, ''); })
+    .catch(() => {});
+
+  // The same pointers and the same aiming maths as the app, redone with DOM elements.
+  const A = 'assets/pointers/';
+  const hand = (id, name, rod, ink) => ({
+    id, name, ink, rod: {color: rod, line: rod, width: 13 / 240}, top: 18 / 240,
+    poses: {
+      point: {file: `${id}-point.svg`, tip: [.4, .0875], wrist: [.5, .8917]},
+      open: {file: `${id}-open.svg`, tip: [.4708, .1042], wrist: [.5, .8917]},
+    },
+  });
+  const POINTERS = [
+    hand('parchment', 'Parchment', '#1B1A17', '#1B1A17'),
+    hand('vermilion', 'Vermilion', '#1B1A17', '#E5482D'),
+    hand('lilac', 'Lilac', '#231A3D', '#8754F2'),
+    hand('robot', 'Robot', '#7C8794', '#16A87A'),
+    hand('neon', 'Neon', '#3DF4FF', '#E0309A'),
+    {id: 'wand', name: 'Magic wand', ink: '#F2B705', rod: {color: '#1B1A17', line: '#1B1A17', width: .1}, top: .0875,
+      poses: {point: {file: 'wand.svg', tip: [.5, .0875], wrist: [.5, .8917]}}},
+    {id: 'paw', name: 'Cat paw', ink: '#F2A65A', rigid: true, rod: {color: '#F2A65A', line: '#3A2416', width: .4083}, top: .1833,
+      poses: {point: {file: 'paw.svg', tip: [.5, .1833], wrist: [.5, .8917]}}},
+    {id: 'pencil', name: 'Pencil', ink: '#2B2B33', rigid: true, rod: {color: '#FFCB3D', line: '#3D2A00', width: .2417}, top: .0625,
+      poses: {point: {file: 'pencil.svg', tip: [.5, .0625], wrist: [.5, .8917]}}},
+  ];
+
+  const stage = document.getElementById('stage');
+  const ink = document.getElementById('ink');
+  const picker = document.getElementById('picker');
+  const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
+  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!fine) return;
+
+  const el = (tag, cls) => { const e = document.createElement(tag); e.className = cls; stage.appendChild(e); return e; };
+  const rodShade = el('div', 'rod shade');
+  const shade = {point: el('img', 'hand shade'), open: el('img', 'hand shade')};
+  const rod = el('div', 'rod');
+  const img = {point: el('img', 'hand'), open: el('img', 'hand')};
+
+  let def = POINTERS[0], live = false, pose = 'point';
+  let mx = innerWidth * .7, my = innerHeight * .45, last = null, vel = {x: 0, y: 0};
+  let gripX = null, press = 0, held = false, lean = 0, leanV = 0;
+  let stroking = false, phase = 0, scrollUntil = 0, dir = -1, enter = 0;
+  let down = null, stroke = null;
+
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  const follow = (dt, tau) => 1 - Math.exp(-dt / tau);
+  const smooth = t => t * t * (3 - 2 * t);
+  const back = t => 1 + 2.55 * Math.pow(t - 1, 3) + 1.55 * Math.pow(t - 1, 2);
+
+  function setPointer(p) {
+    def = p;
+    for (const name of ['point', 'open']) {
+      const q = p.poses[name] || p.poses.point;
+      img[name].src = shade[name].src = A + q.file;
+    }
+    rod.style.background = p.rod.color;
+    rod.style.border = `3px solid ${p.rod.line}`;
+    rod.style.borderRadius = p.rigid ? '0' : '999px';
+    rodShade.style.borderRadius = rod.style.borderRadius;
+    for (const b of picker.querySelectorAll('[data-id]')) b.setAttribute('aria-pressed', String(live && b.dataset.id === p.id));
+  }
+
+  function setLive(on) {
+    live = on;
+    stage.hidden = !on;
+    document.body.classList.toggle('live', on);
+    off.textContent = on ? 'Put it away' : 'Try it here';
+    if (on) { enter = performance.now(); last = null; gripX = null; requestAnimationFrame(frame); }
+    setPointer(def);
+  }
+
+  function frame(now) {
+    if (!live) return;
+    const W = innerWidth, H = innerHeight, t = now / 1000;
+    const dt = last ? clamp(t - last.t, .001, .05) : 1 / 60;
+    if (last) {
+      const a = follow(dt, .05);
+      vel.x += ((mx - last.x) / dt - vel.x) * a;
+      vel.y += ((my - last.y) / dt - vel.y) * a;
+    }
+    last = {x: mx, y: my, t};
+    if (!held && !stroking) press += (0 - press) * follow(dt, .045);
+
+    // scrolling: the open hand strokes the page, lifts, and comes back
+    let oy = 0, lifted = 0;
+    if (stroking) {
+      phase += dt * 2.1;
+      if (phase >= 1) { if (t > scrollUntil) { stroking = false; phase = 0; pose = 'point'; } else phase -= 1; }
+      if (stroking) {
+        let s;
+        if (phase < .62) { s = phase / .62 - .5; press += (.8 - press) * follow(dt, .03); }
+        else { const r = smooth((phase - .62) / .38); s = .5 - r; lifted = Math.sin(r * Math.PI); press += (0 - press) * follow(dt, .03); }
+        oy = dir * s * .085 * H;
+      }
+    }
+    const q = def.poses[pose] || def.poses.point;
+    const size = clamp(H * .15, 96, 170);
+    const c = size / (def.poses.point.wrist[1] - def.top);
+    const k = (1 - (def.rigid ? 0 : .07) * press) * (1 + (def.rigid ? 0 : .05) * lifted);
+    const ck = c * k;
+
+    const rise = calm ? 1 : back(clamp((now - enter) / 520, 0, 1));
+    const tx = mx, ty = my + oy + (1 - rise) * (H - my + ck);
+
+    const target = clamp(mx + .3 * W, W * .15, W * 1.05);
+    gripX = gripX === null ? target : gripX + (target - gripX) * follow(dt, .1);
+    let gx = gripX, gy = H * 1.12;
+    const tipOff = (q.tip[0] - q.wrist[0]) * ck, handTip = (q.wrist[1] - q.tip[1]) * ck;
+    const minReach = Math.hypot(tipOff, handTip + .05 * H);
+    let dx = tx - gx, dy = ty - gy, reach = Math.hypot(dx, dy);
+    if (reach < minReach) { const f = minReach / Math.max(1, reach); gx = tx - dx * f; gy = ty - dy * f; dx = tx - gx; dy = ty - gy; reach = minReach; }
+    const along = Math.sqrt(Math.max(0, reach * reach - tipOff * tipOff));
+    const theta = Math.atan2(dy, dx) - Math.atan2(-along, tipOff);
+
+    if (!def.rigid && !calm) {
+      const side = vel.x * -(dy / reach) + vel.y * (dx / reach);
+      const want = clamp(side * .009, -16, 16);
+      leanV += (17 * 17 * (want - lean) - 2 * .42 * 17 * leanV) * dt;
+      lean += leanV * dt;
+    } else lean = 0;
+    const angle = theta + lean * Math.PI / 180;
+
+    const cos = Math.cos(angle), sin = Math.sin(angle);
+    const wvx = (q.wrist[0] - q.tip[0]) * ck, wvy = (q.wrist[1] - q.tip[1]) * ck;
+    const wx = tx + wvx * cos - wvy * sin, wy = ty + wvx * sin + wvy * cos;
+    const ra = Math.atan2(gy - wy, gx - wx), tuck = (def.rigid ? .02 : .05) * ck;
+    const rw = def.rod.width * c, rl = Math.hypot(W, H) * 1.4;
+    const lift = .05 * H * (1 - .82 * press + .5 * lifted);
+
+    const placeHand = (e, x, y, show) => {
+      e.style.display = show ? '' : 'none';
+      e.style.width = e.style.height = c + 'px';
+      e.style.transformOrigin = `${q.tip[0] * 100}% ${q.tip[1] * 100}%`;
+      e.style.transform = `translate(${x - q.tip[0] * c}px, ${y - q.tip[1] * c}px) rotate(${angle}rad) scale(${k})`;
+    };
+    const placeRod = (e, ox, oyy) => {
+      e.style.width = rw + 'px'; e.style.height = rl + 'px';
+      e.style.transform = `translate(${wx - Math.cos(ra) * tuck + ox - rw / 2}px, ${wy - Math.sin(ra) * tuck + oyy}px) rotate(${ra - Math.PI / 2}rad)`;
+    };
+    for (const name of ['point', 'open']) {
+      placeHand(img[name], tx, ty, name === pose);
+      placeHand(shade[name], tx + lift * .55, ty + lift, name === pose);
+    }
+    placeRod(rod, 0, 0);
+    placeRod(rodShade, lift * .55, lift);
+
+    if (down && stroke) extend(mx, my);
+    requestAnimationFrame(frame);
+  }
+
+  // ink
+  function pathOf(pts) {
+    let d = `M${pts[0][0]} ${pts[0][1]}`;
+    for (let i = 1; i < pts.length; i++) {
+      const p = pts[i - 1], n = pts[i];
+      d += ` Q${p[0]} ${p[1]} ${(p[0] + n[0]) / 2} ${(p[1] + n[1]) / 2}`;
+    }
+    const e = pts[pts.length - 1];
+    return d + ` L${e[0]} ${e[1]}`;
+  }
+  function extend(x, y) {
+    const pts = stroke.pts, l = pts[pts.length - 1];
+    if (Math.hypot(x - l[0], y - l[1]) < 1.5) return;
+    pts.push([x, y]);
+    stroke.el.setAttribute('d', pathOf(pts));
+  }
+  function endStroke() {
+    if (!stroke) return;
+    const s = stroke.el; stroke = null;
+    setTimeout(() => { s.style.opacity = 0; setTimeout(() => s.remove(), 650); }, 3000);
+  }
+
+  addEventListener('pointermove', e => { mx = e.clientX; my = e.clientY; if (down && !stroke && Math.hypot(mx - down[0], my - down[1]) > 4) {
+    const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    p.setAttribute('stroke', def.ink); p.setAttribute('stroke-width', Math.max(3, innerHeight * .0055));
+    ink.appendChild(p); stroke = {el: p, pts: [down]};
+  } }, {passive: true});
+  addEventListener('pointerdown', e => {
+    if (!live || e.button !== 0) return;
+    press = 1; held = true;
+    if (!e.target.closest('a, button')) { down = [e.clientX, e.clientY]; e.preventDefault(); }
+    const d = 64, r = document.createElement('div');
+    r.className = 'ring'; r.style.cssText = `width:${d}px;height:${d}px;left:${e.clientX - d / 2}px;top:${e.clientY - d / 2}px;border-color:${def.ink}`;
+    stage.appendChild(r); setTimeout(() => r.remove(), 450);
+  });
+  addEventListener('pointerup', () => { held = false; down = null; endStroke(); });
+  addEventListener('selectstart', e => { if (live && down) e.preventDefault(); });
+  let lastY = scrollY;
+  addEventListener('scroll', () => {
+    const y = scrollY; if (!live || calm || y === lastY) { lastY = y; return; }
+    dir = y > lastY ? -1 : 1; lastY = y;
+    if (!stroking) { stroking = true; phase = 0; pose = def.poses.open ? 'open' : 'point'; }
+    scrollUntil = performance.now() / 1000 + .34;
+  }, {passive: true});
+  addEventListener('keydown', e => { if (e.key === 'Escape' && live) setLive(false); });
+
+  // picker
+  for (const p of POINTERS) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.dataset.id = p.id; b.title = p.name; b.setAttribute('aria-label', p.name);
+    b.innerHTML = `<img src="${A + p.poses.point.file}" alt="">`;
+    b.addEventListener('click', () => { def = p; setLive(true); });
+    picker.appendChild(b);
+  }
+  const sep = document.createElement('span'); sep.className = 'sep'; picker.appendChild(sep);
+  const off = document.createElement('button');
+  off.type = 'button'; off.className = 'x';
+  off.addEventListener('click', () => setLive(!live));
+  picker.appendChild(off);
+
+  setLive(true);
+})();
+</script>
+</body>
+</html>

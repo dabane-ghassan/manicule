@@ -1,0 +1,64 @@
+/* Manicule: toolbar, ink tray and hints. Paper, ink and one rubric red. */
+
+.manicule-toolbar {
+    background-color: rgba(27, 26, 23, 0.90);
+    border: 1px solid rgba(244, 237, 224, 0.16);
+    border-radius: 18px;
+    padding: 5px;
+    spacing: 2px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.manicule-toolbar-group { spacing: 2px; }
+
+.manicule-toolbar-sep {
+    width: 1px;
+    height: 22px;
+    margin: 0 6px;
+    background-color: rgba(244, 237, 224, 0.20);
+}
+
+.manicule-tool {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    color: #f4ede0;
+    transition-duration: 120ms;
+}
+.manicule-tool:hover { background-color: rgba(244, 237, 224, 0.12); }
+.manicule-tool:active { background-color: rgba(244, 237, 224, 0.22); }
+.manicule-tool:checked { background-color: rgba(229, 72, 45, 0.92); }
+.manicule-pointer:checked { background-color: rgba(244, 237, 224, 0.20); }
+
+.manicule-tool-icon { icon-size: 16px; }
+.manicule-pointer-icon { icon-size: 30px; }
+
+.manicule-ink-dot { width: 18px; height: 18px; }
+.manicule-ink-swatch {
+    width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    border: 1px solid rgba(244, 237, 224, 0.55);
+}
+.manicule-ink-swatch-icon { icon-size: 18px; }
+.manicule-ink-match { background-color: transparent; border: 2px solid #f4ede0; }
+.manicule-ink-match-label { font-size: 9px; font-weight: bold; color: #f4ede0; }
+
+.manicule-hint {
+    background-color: rgba(27, 26, 23, 0.92);
+    border: 1px solid rgba(244, 237, 224, 0.16);
+    border-radius: 14px;
+    padding: 9px 14px;
+    spacing: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+.manicule-hint-pair { spacing: 7px; }
+.manicule-hint-key {
+    background-color: rgba(244, 237, 224, 0.16);
+    color: #f4ede0;
+    border-radius: 6px;
+    padding: 2px 7px;
+    font-size: 12px;
+    font-weight: bold;
+}
+.manicule-hint-text { color: rgba(244, 237, 224, 0.78); font-size: 13px; }

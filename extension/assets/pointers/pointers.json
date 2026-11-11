@@ -1,0 +1,645 @@
+[
+ {
+  "id": "vermilion",
+  "title": "Vermilion",
+  "kind": "hand",
+  "ink": "#E5482D",
+  "rod": {
+   "color": "#1B1A17",
+   "line": "#1B1A17",
+   "width": 0.0542
+  },
+  "top": 0.075,
+  "poses": {
+   "point": {
+    "file": "vermilion-point.svg",
+    "shadow": "hand-point.shadow.svg",
+    "tip": [
+     0.4,
+     0.0875
+    ],
+    "wrist": [
+     0.5,
+     0.8917
+    ]
+   },
+   "open": {
+    "file": "vermilion-open.svg",
+    "shadow": "hand-open.shadow.svg",
+    "tip": [
+     0.4708,
+     0.1042
+    ],
+    "wrist": [
+     0.5,
+     0.8917
+    ]
+   }
+  }
+ },
+ {
+  "id": "parchment",
+  "title": "Parchment",
+  "kind": "hand",
+  "ink": "#1B1A17",
+  "rod": {
+   "color": "#1B1A17",
+   "line": "#1B1A17",
+   "width": 0.0542
+  },
+  "top": 0.075,
+  "poses": {
+   "point": {
+    "file": "parchment-point.svg",
+    "shadow": "hand-point.shadow.svg",
+    "tip": [
+     0.4,
+     0.0875
+    ],
+    "wrist": [
+     0.5,
+     0.8917
+    ]
+   },
+   "open": {
+    "file": "parchment-open.svg",
+    "shadow": "hand-open.shadow.svg",
+    "tip": [
+     0.4708,
+     0.1042
+    ],
+    "wrist": [
+     0.5,
+     0.8917
+    ]
+   }
+  }
+ },
+ {
+  "id": "ink",
+  "title": "Ink",
+  "kind": "hand",
+  "ink": "#24222B",
+  "rod": {
+   "color": "#F4EDE0",
+   "line": "#0B0A0E",
+   "width": 0.0542
+  },
+  "top": 0.075,
+  "poses": {
+   "point": {
+    "file": "ink-point.svg",
+    "shadow": "hand-point.shadow.svg",
+    "tip": [
+     0.4,
+     0.0875
+    ],
+    "wrist": [
+     0.5,
+     0.8917
+    ]
+   },
+   "open": {
+    "file": "ink-open.svg",
+    "shadow": "hand-open.shadow.svg",
+    "tip": [
+     0.4708,
+     0.1042
+    ],
+    "wrist": [
+     0.5,
+     0.8917
+    ]
+   }
+  }
+ },
+ {
+  "id": "lilac",
+  "title": "Lilac",
+  "kind": "hand",
+  "ink": "#8754F2",
+  "rod": {
+   "color": "#231A3D",
+   "line": "#231A3D",
+   "width": 0.0542
+  },
+  "top": 0.075,
+  "poses": {
+   "point": {
+    "file": "lilac-point.svg",
+    "shadow": "hand-point.shadow.svg",
+    "tip": [
+     0.4,
+     0.0875
+    ],
+    "wrist": [
+     0.5,
+     0.8917
+    ]
+   },
+   "open": {
+    "file": "lilac-open.svg",
+    "shadow": "hand-open.shadow.svg",
+    "tip": [
+     0.4708,
+     0.1042
+    ],
+    "wrist": [
+     0.5,
+     0.8917
+    ]
+   }
+  }
+ },
+ {
+  "id": "mint",
+  "title": "Mint",
+  "kind": "hand",
+  "ink": "#16A87A",
+  "rod": {
+   "color": "#103526",
+   "line": "#103526",
+   "width": 0.0542
+  },
+  "top": 0.075,
+  "poses": {
+   "point": {
+    "file": "mint-point.svg",
+    "shadow": "hand-point.shadow.svg",
+    "tip": [
+     0.4,
+     0.0875
+    ],
+    "wrist": [
+     0.5,
+     0.8917
+    ]
+   },
+   "open": {
+    "file": "mint-open.svg",
+    "shadow": "hand-open.shadow.svg",
+    "tip": [
+     0.4708,
+     0.1042
+    ],
+    "wrist": [
+     0.5,
+     0.8917
+    ]
+   }
+  }
+ },
+ {
+  "id": "sky",
+  "title": "Sky",
+  "kind": "hand",
+  "ink": "#2F86F0",
+  "rod": {
+   "color": "#10294A",
+   "line": "#10294A",
+   "width": 0.0542
+  },
+  "top": 0.075,
+  "poses": {
+   "point": {
+    "file": "sky-point.svg",
+    "shadow": "hand-point.shadow.svg",
+    "tip": [
+     0.4,
+     0.0875
+    ],
+    "wrist": [
+     0.5,
+     0.8917
+    ]
+   },
+   "open": {
+    "file": "sky-open.svg",
+    "shadow": "hand-open.shadow.svg",
+    "tip": [
+     0.4708,
+     0.1042
+    ],
+    "wrist": [
+     0.5,
+     0.8917
+    ]
+   }
+  }
+ },
+ {
+  "id": "sunflower",
+  "title": "Sunflower",
+  "kind": "hand",
+  "ink": "#F2B705",
+  "rod": {
+   "color": "#3D2A00",
+   "line": "#3D2A00",
+   "width": 0.0542
+  },
+  "top": 0.075,
+  "poses": {
+   "point": {
+    "file": "sunflower-point.svg",
+    "shadow": "hand-point.shadow.svg",
+    "tip": [
+     0.4,
+     0.0875
+    ],
+    "wrist": [
+     0.5,
+     0.8917
+    ]
+   },
+   "open": {
+    "file": "sunflower-open.svg",
+    "shadow": "hand-open.shadow.svg",
+    "tip": [
+     0.4708,
+     0.1042
+    ],
+    "wrist": [
+     0.5,
+     0.8917
+    ]
+   }
+  }
+ },
+ {
+  "id": "bubblegum",
+  "title": "Bubblegum",
+  "kind": "hand",
+  "ink": "#EE4F98",
+  "rod": {
+   "color": "#4A1030",
+   "line": "#4A1030",
+   "width": 0.0542
+  },
+  "top": 0.075,
+  "poses": {
+   "point": {
+    "file": "bubblegum-point.svg",
+    "shadow": "hand-point.shadow.svg",
+    "tip": [
+     0.4,
+     0.0875
+    ],
+    "wrist": [
+     0.5,
+     0.8917
+    ]
+   },
+   "open": {
+    "file": "bubblegum-open.svg",
+    "shadow": "hand-open.shadow.svg",
+    "tip": [
+     0.4708,
+     0.1042
+    ],
+    "wrist": [
+     0.5,
+     0.8917
+    ]
+   }
+  }
+ },
+ {
+  "id": "robot",
+  "title": "Robot",
+  "kind": "hand",
+  "ink": "#16A87A",
+  "rod": {
+   "color": "#7C8794",
+   "line": "#262B33",
+   "width": 0.0542
+  },
+  "top": 0.075,
+  "poses": {
+   "point": {
+    "file": "robot-point.svg",
+    "shadow": "hand-point.shadow.svg",
+    "tip": [
+     0.4,
+     0.0875
+    ],
+    "wrist": [
+     0.5,
+     0.8917
+    ]
+   },
+   "open": {
+    "file": "robot-open.svg",
+    "shadow": "hand-open.shadow.svg",
+    "tip": [
+     0.4708,
+     0.1042
+    ],
+    "wrist": [
+     0.5,
+     0.8917
+    ]
+   }
+  }
+ },
+ {
+  "id": "zombie",
+  "title": "Zombie",
+  "kind": "hand",
+  "ink": "#3E9E2E",
+  "rod": {
+   "color": "#3A2A1C",
+   "line": "#22301A",
+   "width": 0.0542
+  },
+  "top": 0.075,
+  "poses": {
+   "point": {
+    "file": "zombie-point.svg",
+    "shadow": "hand-point.shadow.svg",
+    "tip": [
+     0.4,
+     0.0875
+    ],
+    "wrist": [
+     0.5,
+     0.8917
+    ]
+   },
+   "open": {
+    "file": "zombie-open.svg",
+    "shadow": "hand-open.shadow.svg",
+    "tip": [
+     0.4708,
+     0.1042
+    ],
+    "wrist": [
+     0.5,
+     0.8917
+    ]
+   }
+  }
+ },
+ {
+  "id": "neon",
+  "title": "Neon",
+  "kind": "hand",
+  "ink": "#E0309A",
+  "rod": {
+   "color": "#3DF4FF",
+   "line": "#3DF4FF",
+   "width": 0.0542
+  },
+  "top": 0.075,
+  "poses": {
+   "point": {
+    "file": "neon-point.svg",
+    "shadow": "hand-point.shadow.svg",
+    "tip": [
+     0.4,
+     0.0875
+    ],
+    "wrist": [
+     0.5,
+     0.8917
+    ]
+   },
+   "open": {
+    "file": "neon-open.svg",
+    "shadow": "hand-open.shadow.svg",
+    "tip": [
+     0.4708,
+     0.1042
+    ],
+    "wrist": [
+     0.5,
+     0.8917
+    ]
+   }
+  },
+  "glow": true
+ },
+ {
+  "id": "gold",
+  "title": "Gold",
+  "kind": "hand",
+  "ink": "#F2B705",
+  "rod": {
+   "color": "#B7791F",
+   "line": "#6A3F00",
+   "width": 0.0542
+  },
+  "top": 0.075,
+  "poses": {
+   "point": {
+    "file": "gold-point.svg",
+    "shadow": "hand-point.shadow.svg",
+    "tip": [
+     0.4,
+     0.0875
+    ],
+    "wrist": [
+     0.5,
+     0.8917
+    ]
+   },
+   "open": {
+    "file": "gold-open.svg",
+    "shadow": "hand-open.shadow.svg",
+    "tip": [
+     0.4708,
+     0.1042
+    ],
+    "wrist": [
+     0.5,
+     0.8917
+    ]
+   }
+  }
+ },
+ {
+  "id": "scribe",
+  "title": "Scribe",
+  "kind": "hand",
+  "ink": "#5B3A1E",
+  "rod": {
+   "color": "#5B3A1E",
+   "line": "#5B3A1E",
+   "width": 0.0542
+  },
+  "top": 0.075,
+  "poses": {
+   "point": {
+    "file": "scribe-point.svg",
+    "shadow": "hand-point.shadow.svg",
+    "tip": [
+     0.4,
+     0.0875
+    ],
+    "wrist": [
+     0.5,
+     0.8917
+    ]
+   },
+   "open": {
+    "file": "scribe-open.svg",
+    "shadow": "hand-open.shadow.svg",
+    "tip": [
+     0.4708,
+     0.1042
+    ],
+    "wrist": [
+     0.5,
+     0.8917
+    ]
+   }
+  }
+ },
+ {
+  "id": "paw",
+  "title": "Cat paw",
+  "kind": "object",
+  "ink": "#F2A65A",
+  "rod": {
+   "color": "#F2A65A",
+   "line": "#3A2416",
+   "width": 0.4083
+  },
+  "top": 0.1833,
+  "poses": {
+   "point": {
+    "file": "paw.svg",
+    "shadow": "paw.shadow.svg",
+    "tip": [
+     0.5,
+     0.1833
+    ],
+    "wrist": [
+     0.5,
+     0.8917
+    ]
+   }
+  },
+  "rigid": true
+ },
+ {
+  "id": "wand",
+  "title": "Magic wand",
+  "kind": "object",
+  "ink": "#F2B705",
+  "rod": {
+   "color": "#1B1A17",
+   "line": "#1B1A17",
+   "width": 0.1
+  },
+  "top": 0.0875,
+  "poses": {
+   "point": {
+    "file": "wand.svg",
+    "shadow": "wand.shadow.svg",
+    "tip": [
+     0.5,
+     0.0875
+    ],
+    "wrist": [
+     0.5,
+     0.8917
+    ]
+   }
+  },
+  "sparkle": true
+ },
+ {
+  "id": "foam",
+  "title": "Foam finger",
+  "kind": "object",
+  "ink": "#2F6FED",
+  "rod": {
+   "color": "#E9D3A8",
+   "line": "#5B4423",
+   "width": 0.0833
+  },
+  "top": 0.0708,
+  "poses": {
+   "point": {
+    "file": "foam.svg",
+    "shadow": "foam.shadow.svg",
+    "tip": [
+     0.4,
+     0.0708
+    ],
+    "wrist": [
+     0.5,
+     0.8917
+    ]
+   }
+  }
+ },
+ {
+  "id": "pencil",
+  "title": "Pencil",
+  "kind": "object",
+  "ink": "#2B2B33",
+  "rod": {
+   "color": "#FFCB3D",
+   "line": "#3D2A00",
+   "width": 0.2417
+  },
+  "top": 0.0625,
+  "poses": {
+   "point": {
+    "file": "pencil.svg",
+    "shadow": "pencil.shadow.svg",
+    "tip": [
+     0.5,
+     0.0625
+    ],
+    "wrist": [
+     0.5,
+     0.8917
+    ]
+   }
+  },
+  "rigid": true
+ },
+ {
+  "id": "quill",
+  "title": "Quill",
+  "kind": "object",
+  "ink": "#1B1A17",
+  "rod": {
+   "color": "#E8DCC0",
+   "line": "#3A2A1C",
+   "width": 0.0583
+  },
+  "top": 0.05,
+  "poses": {
+   "point": {
+    "file": "quill.svg",
+    "shadow": "quill.shadow.svg",
+    "tip": [
+     0.5,
+     0.05
+    ],
+    "wrist": [
+     0.5,
+     0.8917
+    ]
+   }
+  },
+  "rigid": true
+ },
+ {
+  "id": "laser",
+  "title": "Laser dot",
+  "kind": "laser",
+  "ink": "#FF2A1F",
+  "icon": "laser.svg"
+ },
+ {
+  "id": "spotlight",
+  "title": "Spotlight",
+  "kind": "spotlight",
+  "ink": "#FFCB3D",
+  "icon": "spotlight.svg"
+ }
+]

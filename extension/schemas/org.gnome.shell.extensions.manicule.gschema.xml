@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.manicule" path="/org/gnome/shell/extensions/manicule/">
+
+    <key name="pointer" type="s">
+      <default>'vermilion'</default>
+      <summary>Selected pointer</summary>
+    </key>
+    <key name="pinned" type="as">
+      <default>['vermilion', 'parchment', 'lilac', 'robot', 'wand', 'laser', 'spotlight']</default>
+      <summary>Pointers shown in the toolbar (up to 8)</summary>
+    </key>
+    <key name="custom-pointers" type="s">
+      <default>'[]'</default>
+      <summary>Pointers the user added, as a JSON list</summary>
+    </key>
+
+    <key name="pointer-size" type="d">
+      <range min="0.08" max="0.20"/>
+      <default>0.13</default>
+      <summary>Hand length as a fraction of the screen height</summary>
+    </key>
+    <key name="show-shadow" type="b">
+      <default>true</default>
+      <summary>Draw a shadow under the hand</summary>
+    </key>
+    <key name="tap-ripple" type="b">
+      <default>true</default>
+      <summary>Show a ripple where the hand taps</summary>
+    </key>
+    <key name="scroll-gesture" type="b">
+      <default>true</default>
+      <summary>The hand strokes the page while you scroll</summary>
+    </key>
+    <key name="entrance-animation" type="b">
+      <default>true</default>
+      <summary>The hand rises and waves when turned on</summary>
+    </key>
+    <key name="wobble" type="b">
+      <default>true</default>
+      <summary>The hand sways on its stick when moved quickly</summary>
+    </key>
+
+    <key name="ink-color" type="s">
+      <choices>
+        <choice value="match"/><choice value="red"/><choice value="orange"/><choice value="yellow"/>
+        <choice value="green"/><choice value="blue"/><choice value="purple"/><choice value="white"/>
+        <choice value="black"/><choice value="rainbow"/>
+      </choices>
+      <default>'match'</default>
+      <summary>Ink colour</summary>
+    </key>
+    <key name="fade-seconds" type="d">
+      <range min="0" max="30"/>
+      <default>3</default>
+      <summary>Seconds before a drawing fades; 0 keeps it until cleared</summary>
+    </key>
+
+    <key name="sound-hands" type="b">
+      <default>true</default>
+      <summary>Tap sound for hands and objects</summary>
+    </key>
+    <key name="sound-effects" type="b">
+      <default>false</default>
+      <summary>Tap sound for the laser dot and the spotlight</summary>
+    </key>
+    <key name="tap-sound" type="s">
+      <default>'thock'</default>
+      <summary>Which tap sound to play</summary>
+    </key>
+
+    <key name="interact-key" type="s">
+      <choices>
+        <choice value="alt"/><choice value="ctrl"/><choice value="super"/><choice value="off"/>
+      </choices>
+      <default>'alt'</default>
+      <summary>Hold this key to click for real</summary>
+    </key>
+    <key name="interact-keeps-hand" type="b">
+      <default>false</default>
+      <summary>Keep the hand instead of showing the cursor while clicking for real</summary>
+    </key>
+    <key name="double-shift-click-through" type="b">
+      <default>false</default>
+      <summary>Double-tap Shift to toggle click-through</summary>
+    </key>
+
+    <key name="show-toolbar" type="b">
+      <default>true</default>
+      <summary>Show the toolbar at the bottom of the screen</summary>
+    </key>
+    <key name="show-ink-button" type="b">
+      <default>true</default>
+      <summary>Show the ink colour button in the toolbar</summary>
+    </key>
+    <key name="hint-shown" type="b">
+      <default>false</default>
+      <summary>The first-run hint has been shown</summary>
+    </key>
+
+    <key name="toggle-shortcut" type="as">
+      <default><![CDATA[['<Control><Alt>h']]]></default>
+      <summary>Turn the pointer on or off</summary>
+    </key>
+    <key name="clear-shortcut" type="as">
+      <default><![CDATA[['<Control><Alt>x']]]></default>
+      <summary>Clear the drawing</summary>
+    </key>
+    <key name="click-through-shortcut" type="as">
+      <default><![CDATA[['<Control><Alt>c']]]></default>
+      <summary>Toggle click-through</summary>
+    </key>
+    <key name="exit-shortcut" type="as">
+      <default>['Escape']</default>
+      <summary>Clear everything and turn the pointer off (only bound while it is on)</summary>
+    </key>
+
+  </schema>
+</schemalist>

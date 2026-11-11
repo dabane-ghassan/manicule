@@ -1,0 +1,103 @@
+#!/bin/sh
+# manicule: control the Manicule pointer from a terminal, a launcher or a manicule:// link.
+# https://github.com/dabane-ghassan/manicule
+
+UUID="manicule@dabane-ghassan.github.io"
+DEST="org.gnome.Shell"
+OBJECT="/io/github/dabane_ghassan/Manicule"
+IFACE="io.github.dabane_ghassan.Manicule"
+
+usage() {
+    cat <<USAGE
+Usage: manicule <command>
+
+  toggle | on | off         turn the pointer on or off
+  clear                     clear the drawing
+  pointer <id>              switch pointer and turn it on (see: manicule list)
+  sound on|off|toggle       tap sound for the current pointer
+  through on|off|toggle     let clicks reach the apps underneath
+  list                      pointer ids
+  state                     current state as JSON
+  app                       open the Manicule window (also: settings)
+
+Links work too:  xdg-open manicule://toggle   (on, off, clear, pointer/<id>, sound/<v>, through/<v>)
+USAGE
+}
+
+call() {
+    method="$1"; shift
+    gdbus call --session --dest "$DEST" --object-path "$OBJECT" --method "$IFACE.$method" "$@" 2>/dev/null
+}
+
+running() {
+    call GetState >/dev/null
+}
+
+notify() {
+    if command -v notify-send >/dev/null 2>&1; then
+        notify-send -a Manicule -i io.github.dabane_ghassan.Manicule "Manicule" "$1"
+    fi
+    echo "$1" >&2
+}
+
+need() {
+    running && return 0
+    if ! command -v gnome-extensions >/dev/null 2>&1; then
+        notify "Manicule needs the GNOME desktop."
+        exit 1
+    fi
+    gnome-extensions enable "$UUID" >/dev/null 2>&1
+    sleep 1
+    running && return 0
+    notify "Almost there: log out and back in once so GNOME loads Manicule. Then look for the hand in the top bar."
+    exit 1
+}
+
+state() {
+    # GetState returns ('<json>',): strip the tuple wrapper and unescape
+    call GetState | sed -e "s/^('//" -e "s/',)\$//" -e 's/\\\\/\\/g' -e "s/\\\\'/'/g"
+}
+
+cmd="$1"
+case "$cmd" in
+    manicule://*)
+        rest="${cmd#manicule://}"
+        cmd="${rest%%/*}"
+        arg=""
+        case "$rest" in */*) arg="${rest#*/}"; arg="${arg%%/*}";; esac
+        [ "$cmd" = "style" ] && cmd="pointer"
+        set -- "$cmd" "$arg"
+        ;;
+esac
+
+case "$cmd" in
+    toggle)   need; call Toggle >/dev/null ;;
+    on)       need; call On >/dev/null ;;
+    off)      need; call Off >/dev/null ;;
+    clear)    need; call Clear >/dev/null ;;
+    pointer)
+        need
+        [ -n "$2" ] || { echo "manicule: which pointer? try: manicule list" >&2; exit 2; }
+        case "$(call SetPointer "$2")" in
+            *true*) ;;
+            *) echo "manicule: no pointer called '$2'. try: manicule list" >&2; exit 2 ;;
+        esac
+        ;;
+    sound)    need; call SetSound "${2:-toggle}" >/dev/null ;;
+    through)  need; call SetClickThrough "${2:-toggle}" >/dev/null ;;
+    state)    need; state ;;
+    list)     need; state | tr '{' '\n' | sed -n 's/.*"id":"\([^"]*\)","name":"\([^"]*\)".*/\1\t\2/p' ;;
+    app|settings|launch|"")
+        if [ -z "$cmd" ] && [ -t 1 ]; then usage; exit 0; fi
+        for dir in "${XDG_DATA_HOME:-$HOME/.local/share}/gnome-shell/extensions/$UUID" \
+                   "/usr/share/gnome-shell/extensions/$UUID" \
+                   "$(dirname "$(readlink -f "$0")")/../extension"; do
+            if [ -f "$dir/app.js" ]; then
+                exec gjs -m "$dir/app.js"
+            fi
+        done
+        notify "Manicule's files are missing. Please install it again."
+        exit 1 ;;
+    -h|--help|help) usage ;;
+    *) usage >&2; exit 2 ;;
+esac

@@ -1,0 +1,18 @@
+[Desktop Entry]
+Type=Application
+Name=Manicule
+GenericName=Pointer for demos and talks
+Comment=A little hand on a stick that points at things on your screen
+Exec=manicule %u
+Icon=io.github.dabane_ghassan.Manicule
+Terminal=false
+Categories=Utility;GNOME;
+Keywords=pointer;cursor;presentation;demo;laser;annotate;draw;hand;
+MimeType=x-scheme-handler/manicule;
+StartupNotify=true
+StartupWMClass=io.github.dabane_ghassan.Manicule
+Actions=toggle;
+
+[Desktop Action toggle]
+Name=Turn the pointer on or off
+Exec=manicule toggle
