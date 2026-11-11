@@ -11,6 +11,7 @@ set -eu
 UUID="manicule@dabane-ghassan.github.io"
 APP="io.github.dabane_ghassan.Manicule"
 RELEASE="https://github.com/dabane-ghassan/manicule/releases/latest/download/manicule.tar.gz"
+SOURCE="https://github.com/dabane-ghassan/manicule/archive/refs/heads/main.tar.gz"
 DATA="${XDG_DATA_HOME:-$HOME/.local/share}"
 EXT="$DATA/gnome-shell/extensions/$UUID"
 BIN="$HOME/.local/bin"
@@ -37,12 +38,23 @@ else
     TMP="$(mktemp -d)"
     trap 'rm -rf "$TMP"' EXIT
     say "Downloading Manicule..."
-    if command -v curl >/dev/null 2>&1; then
-        curl -fsSL "$RELEASE" -o "$TMP/manicule.tar.gz"
+    fetch() {
+        if command -v curl >/dev/null 2>&1; then
+            curl -fsSL "$1" -o "$2" 2>/dev/null
+        else
+            wget -q "$1" -O "$2"
+        fi
+    }
+    # the latest release, or the current source when there is no release yet
+    if fetch "$RELEASE" "$TMP/manicule.tar.gz"; then
+        tar -xzf "$TMP/manicule.tar.gz" -C "$TMP"
+    elif fetch "$SOURCE" "$TMP/source.tar.gz"; then
+        tar -xzf "$TMP/source.tar.gz" -C "$TMP"
+        mv "$TMP/manicule-main" "$TMP/manicule"
     else
-        wget -q "$RELEASE" -O "$TMP/manicule.tar.gz"
+        say "Could not download Manicule. Check your connection and try again."
+        exit 1
     fi
-    tar -xzf "$TMP/manicule.tar.gz" -C "$TMP"
     SRC="$TMP/manicule"
 fi
 

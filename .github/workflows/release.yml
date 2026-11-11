@@ -1,0 +1,34 @@
+# Builds manicule.tar.gz and publishes a GitHub release whenever the version in
+# extension/metadata.json changes on main (or when run by hand from the Actions tab).
+name: Release
+
+on:
+  push:
+    branches: [main]
+    paths: [extension/metadata.json]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: |
+          sudo apt-get install -y -q libglib2.0-bin zip
+          make dist
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(sed -n 's/.*"version-name": *"\(.*\)".*/\1/p' extension/metadata.json)
+          if gh release view "v$version" >/dev/null 2>&1; then
+            gh release upload "v$version" dist/manicule.tar.gz dist/manicule.shell-extension.zip --clobber
+          else
+            gh release create "v$version" dist/manicule.tar.gz dist/manicule.shell-extension.zip \
+              --title "Manicule $version" --target "$GITHUB_SHA" \
+              --notes "Install or update: \`curl -fsSL https://dabane-ghassan.github.io/manicule/install.sh | sh\`, then log out and back in once."
+          fi
