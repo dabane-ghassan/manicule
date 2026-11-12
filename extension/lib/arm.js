@@ -321,6 +321,15 @@ export class Arm {
             this._sprite('pow', x, y - unit * 0.05, unit * 0.2, {
                 from: 0.25, to: 1.15, hold: 140, fade: 260, turn: (Math.random() - 0.5) * 24,
             });
+        } else if (this._def?.fx === 'trace') {
+            // the electrode records an action potential wherever it touches down
+            this._sprite('trace', x + unit * 0.11, y - unit * 0.08, unit * 0.17, {from: 0.4, to: 1, hold: 650, fade: 300});
+        } else if (this._def?.fx === 'wave') {
+            // stimulation: activity spreads outwards in rings
+            for (const [to, grow] of [[0.8, 260], [1.5, 420], [2.3, 600]])
+                this._sprite('ring', x, y, unit * 0.1, {from: 0.1, to, grow, hold: 0, fade: 220});
+        } else if (this._def?.fx === 'flash') {
+            this._sprite('flash', x, y, unit * 0.3, {from: 0.3, to: 1, hold: 60, fade: 300});
         } else if (this._def?.fx === 'splat') {
             this._sprite('splat', x, y, unit * 0.1, {
                 from: 0.5, to: 1, hold: 1400, fade: 500, turn: Math.random() * 360, below: true,
@@ -707,7 +716,7 @@ export class Arm {
     }
 
     /** One picture that pops up at (x, y), holds, and fades: the POW, the splat. */
-    _sprite(name, x, y, size, {from = 0.5, to = 1, hold = 200, fade = 300, turn = 0, below = false} = {}) {
+    _sprite(name, x, y, size, {from = 0.5, to = 1, grow = 130, hold = 200, fade = 300, turn = 0, below = false} = {}) {
         const px = Math.max(8, Math.round(size));
         const pic = this._icon(GLib.build_filenamev([this._effects, `${name}.svg`]), px);
         pic.set_pivot_point(0.5, 0.5);
@@ -722,9 +731,12 @@ export class Arm {
             pic.set_scale(to, to);
         } else {
             pic.set_scale(from, from);
-            pic.ease({scale_x: to, scale_y: to, duration: 130, mode: Clutter.AnimationMode.EASE_OUT_BACK});
+            pic.ease({
+                scale_x: to, scale_y: to, duration: grow,
+                mode: grow > 130 ? Clutter.AnimationMode.EASE_OUT_QUAD : Clutter.AnimationMode.EASE_OUT_BACK,
+            });
         }
-        const id = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 130 + hold, () => {
+        const id = GLib.timeout_add(GLib.PRIORITY_DEFAULT, grow + hold, () => {
             pic._timer = 0;
             if (!pic._gone) {
                 pic.ease({

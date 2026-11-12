@@ -73,7 +73,7 @@ Keyboard keys always go to the app, so arrow keys still change slides.
 
 ### Pointers
 
-Twenty-seven to choose from.
+Thirty to choose from.
 
 - **Hands:** Vermilion, Parchment, Ink, Lilac, Mint, Sky, Sunflower, Bubblegum, Robot, Zombie,
   Neon, Gold, Skeleton, Scribe.
@@ -84,6 +84,12 @@ Twenty-seven to choose from.
 - **Lobster claw:** it pinches shut while you hold the button.
 - **Rocket:** leaves a trail of exhaust as it flies.
 - **Magic wand:** sheds sparkles.
+- **For neuroscience talks:**
+  - **Electrode:** a glass pipette. Wherever it touches down, a little scope pops up with the
+    action potential it recorded.
+  - **Pyramidal neuron:** the stick is its axon. Drawing with it leaves a spike train instead
+    of a plain line, and a tap stimulates: rings of activity spread from the spot.
+  - **Optogenetics fibre:** a tap is a flash of blue light.
 - **Also:** cat paw, foam finger, pizza slice, pencil, quill, a laser dot with a trail, and a
   spotlight that dims everything but a circle around the mouse.
 

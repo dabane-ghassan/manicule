@@ -394,6 +394,50 @@ def pizza():
     return svg(out), [slice_, crust], {"tip": (120, 13), "wrist": (120, 214)}
 
 
+def electrode():
+    line = "#1D3557"
+    glass = '<path d="M120 12 L140 150 Q140 164 120 164 Q100 164 100 150 Z"/>'
+    holder = '<rect x="92" y="156" width="56" height="60" rx="10"/>'
+    out = f'<g fill="#CFEAFB" stroke="{line}" stroke-width="{LW:g}" stroke-linejoin="round">{glass}</g>'
+    out += '<path d="M120 30 L120 160" stroke="#9AA7B5" stroke-width="4" stroke-linecap="round"/>'
+    out += '<path d="M112 70 L108 140" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity=".8"/>'
+    out += f'<g fill="#3A4A63" stroke="{line}" stroke-width="{LW:g}" stroke-linejoin="round">{holder}</g>'
+    out += '<rect x="100" y="170" width="40" height="9" rx="4.5" fill="#F2B705"/><circle cx="120" cy="198" r="6" fill="#E5482D"/>'
+    return svg(out), [glass, holder], {"tip": (120, 9), "wrist": (120, 214)}
+
+
+def neuron():
+    line, fill = "#3B1466", "#B985F5"
+    soma = '<path d="M120 112 L154 176 Q120 192 86 176 Z"/>'
+    branches = [
+        "M120 118 L120 16",                       # apical dendrite, up to the tip
+        "M120 74 Q104 60 96 36", "M120 58 Q138 46 146 24", "M120 92 Q142 84 160 62", "M120 96 Q98 90 82 70",
+        "M92 174 Q70 176 52 162", "M148 174 Q170 176 188 162", "M96 168 Q78 188 60 198", "M144 168 Q162 188 180 198",
+    ]
+    tree = "".join(f'<path d="{d}"/>' for d in branches)
+    out = f'<g fill="none" stroke="{line}" stroke-width="15" stroke-linecap="round" stroke-linejoin="round">{tree}</g>'
+    out += f'<g fill="{line}" stroke="{line}" stroke-width="{LW * 2:g}" stroke-linejoin="round">{soma}</g>'
+    out += f'<g fill="none" stroke="{fill}" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">{tree}</g>'
+    out += f'<g fill="{fill}">{soma}</g>'
+    out += '<ellipse cx="120" cy="158" rx="13" ry="11" fill="#6B2FB3"/><circle cx="116" cy="154" r="4" fill="#E9D6FF"/>'
+    out += '<rect x="113" y="182" width="14" height="34" rx="5" fill="#B985F5" stroke="#3B1466" stroke-width="5"/>'
+    shapes = [soma, '<rect x="114" y="18" width="12" height="198" rx="6"/>']
+    return svg(out), shapes, {"tip": (120, 12), "wrist": (120, 214)}
+
+
+def opto():
+    line = "#1B2A49"
+    ferrule = '<rect x="98" y="96" width="44" height="120" rx="9"/>'
+    fibre = '<rect x="113" y="30" width="14" height="74" rx="5"/>'
+    defs = '<radialGradient id="blu"><stop offset="0" stop-color="#BFE3FF"/><stop offset=".35" stop-color="#3D9BFF" stop-opacity=".85"/><stop offset="1" stop-color="#3D9BFF" stop-opacity="0"/></radialGradient>'
+    out = '<circle cx="120" cy="30" r="30" fill="url(#blu)"/>'
+    out += f'<g fill="#E8EEF6" stroke="{line}" stroke-width="5" stroke-linejoin="round">{fibre}</g>'
+    out += f'<g fill="#C9D2DE" stroke="{line}" stroke-width="{LW:g}" stroke-linejoin="round">{ferrule}</g>'
+    out += f'<g fill="none" stroke="{line}" stroke-width="3.4" opacity=".5"><path d="M98 126 L142 126"/><path d="M98 186 L142 186"/></g>'
+    out += '<path d="M108 108 L108 200" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity=".7"/><circle cx="120" cy="30" r="7" fill="#EAF6FF"/>'
+    return svg(out, defs), [ferrule, fibre], {"tip": (120, 26), "top": 12, "wrist": (120, 214)}
+
+
 OBJECTS = [
     # id, title, builder, rod colour, rod outline, rod width (canvas units), ink, extras
     ("paw", "Cat paw", paw, "#F2A65A", "#3A2416", 98, "#F2A65A", {"rigid": True}),
@@ -405,6 +449,9 @@ OBJECTS = [
     ("lobster", "Lobster claw", lobster, "#E8452F", "#4A0D0D", 26, "#E8452F", {}),
     ("rocket", "Rocket", rocket, "#C9CED8", "#8A93A3", 9, "#FF7A1A", {"sparkle": True, "trail": "flame"}),
     ("pizza", "Pizza slice", pizza, "#D9A066", "#5A2E0C", 16, "#D8432B", {}),
+    ("electrode", "Electrode", electrode, "#3A4A63", "#1D3557", 14, "#16A87A", {"fx": "trace"}),
+    ("neuron", "Pyramidal neuron", neuron, "#B985F5", "#3B1466", 14, "#8754F2", {"fx": "wave", "inkStyle": "spikes"}),
+    ("opto", "Optogenetics fibre", opto, "#2B5FA8", "#1B2A49", 10, "#2F86F0", {"fx": "flash"}),
     ("quill", "Quill", quill, "#E8DCC0", "#3A2A1C", 14, "#1B1A17", {"rigid": True}),
 ]
 
@@ -470,7 +517,7 @@ def main():
             "rod": {"color": rod, "line": rod_line, "width": round(rod_w / CANVAS, 4)},
             "top": round(geo.get("top", geo["tip"][1]) / CANVAS, 4),
             "poses": poses,
-            **{k: extra[k] for k in ("sparkle", "rigid", "fx", "trail") if extra.get(k)},
+            **{k: extra[k] for k in ("sparkle", "rigid", "fx", "trail", "inkStyle") if extra.get(k)},
         })
 
     for kind, title, ink in (("laser", "Laser dot", "#FF2A1F"), ("spotlight", "Spotlight", "#FFCB3D")):
@@ -524,6 +571,19 @@ def main():
     (fx / "puff.svg").write_text(
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">'
         '<g fill="#FFFFFF" opacity=".92"><circle cx="18" cy="26" r="12"/><circle cx="30" cy="22" r="13"/><circle cx="27" cy="33" r="10"/></g></svg>\n')
+    ap = "M14 78 L60 78 L74 70 L84 18 L96 96 L108 74 L122 78 L186 78"
+    (fx / "trace.svg").write_text(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 120" width="200" height="120">'
+        '<rect x="3" y="3" width="194" height="114" rx="16" fill="#10161F" stroke="#2B3A4F" stroke-width="5"/>'
+        '<g stroke="#22303F" stroke-width="2"><path d="M14 40 H186"/><path d="M14 78 H186"/><path d="M66 12 V108"/><path d="M134 12 V108"/></g>'
+        f'<path d="{ap}" fill="none" stroke="#3DFFA2" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/></svg>\n')
+    (fx / "ring.svg").write_text(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">'
+        '<circle cx="50" cy="50" r="44" fill="none" stroke="#B985F5" stroke-width="6"/></svg>\n')
+    (fx / "flash.svg").write_text(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100"><defs>'
+        '<radialGradient id="g"><stop offset="0" stop-color="#EAF6FF"/><stop offset=".3" stop-color="#3D9BFF" stop-opacity=".8"/>'
+        '<stop offset="1" stop-color="#3D9BFF" stop-opacity="0"/></radialGradient></defs><circle cx="50" cy="50" r="50" fill="url(#g)"/></svg>\n')
     (fx / "star.svg").write_text(
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">'
         '<path d="M24 3 L29 19 L45 24 L29 29 L24 45 L19 29 L3 24 L19 19 Z" fill="#FFD95A" stroke="#FFF7D6" stroke-width="2" stroke-linejoin="round"/></svg>\n')

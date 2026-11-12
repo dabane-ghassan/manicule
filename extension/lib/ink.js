@@ -19,12 +19,13 @@ function hue(h) {
 }
 
 class Stroke {
-    constructor(parent, x, y, width, color) {
+    constructor(parent, x, y, width, color, style = null) {
         this.points = [{x, y}];
         this.width = width;
         this.color = color;
+        this.style = style;         // 'spikes': drawn as a spike train instead of a plain line
         this.arrow = false;
-        this._pad = Math.ceil(width * 5 + 24);
+        this._pad = Math.ceil(width * 7 + 24);
         this._box = null;
         this.area = new St.DrawingArea({reactive: false});
         this.area.connect('repaint', a => this._paint(a));
@@ -100,8 +101,40 @@ class Stroke {
         }
     }
 
+    // A spike train laid along the stroke: a thin baseline with ticks standing across it,
+    // spaced unevenly (but the same way every repaint) like spikes in a recording.
+    _spikes(cr) {
+        const pts = this.points;
+        const tall = this.width * 3.4;
+        let next = 10;
+        let travelled = 0;
+        let n = 0;
+        for (let i = 1; i < pts.length; i++) {
+            const a = pts[i - 1];
+            const b = pts[i];
+            const len = Math.hypot(b.x - a.x, b.y - a.y);
+            if (len < 0.01)
+                continue;
+            const nx = -(b.y - a.y) / len;
+            const ny = (b.x - a.x) / len;
+            while (travelled + len >= next) {
+                const u = (next - travelled) / len;
+                const x = a.x + (b.x - a.x) * u;
+                const y = a.y + (b.y - a.y) * u;
+                cr.moveTo(x - nx * tall * 0.25, y - ny * tall * 0.25);
+                cr.lineTo(x + nx * tall, y + ny * tall);
+                n++;
+                // bursts of close spikes, then a pause
+                next += n % 5 < 3 ? 9 + (n * 7) % 6 : 26 + (n * 13) % 30;
+            }
+            travelled += len;
+        }
+    }
+
     _path(cr) {
         const pts = this.points;
+        if (this.style === 'spikes')
+            this._spikes(cr);
         cr.moveTo(pts[0].x, pts[0].y);
         if (pts.length === 1) {
             cr.lineTo(pts[0].x + 0.01, pts[0].y);
@@ -141,7 +174,7 @@ class Stroke {
     _paint(area) {
         const cr = area.get_context();
         cr.translate(-this._box.x, -this._box.y);
-        cr.setLineWidth(this.width);
+        cr.setLineWidth(this.style === 'spikes' ? this.width * 0.6 : this.width);
         cr.setLineCap(1);   // round
         cr.setLineJoin(1);  // round
 
@@ -189,6 +222,7 @@ export class Ink {
         this._settings = settings;
         this.actor = new Clutter.Actor({reactive: false});
         this.color = '#8754F2';
+        this.style = null;
         this._stroke = null;
         this._timers = new Set();
     }
@@ -202,7 +236,7 @@ export class Ink {
     }
 
     begin(x, y, width) {
-        this._stroke = new Stroke(this.actor, x, y, width, this.color);
+        this._stroke = new Stroke(this.actor, x, y, width, this.color, this.style);
     }
 
     extend(x, y) {

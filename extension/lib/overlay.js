@@ -198,6 +198,7 @@ export class Overlay {
         this._cursor.hide();
         this._arm.setPointer(this._pointer);
         this._ink.color = this._inkColor();
+        this._ink.style = this._pointer.inkStyle ?? null;
         this._toolbar.select(this._pointer);
         this._toolbar.setSoundOn(this.soundOn);
         this._toolbar.setClickThrough(false);
@@ -320,6 +321,7 @@ export class Overlay {
         if (this._arm && this.isActive) {
             this._arm.setPointer(p);
             this._ink.color = this._inkColor();
+            this._ink.style = this._pointer.inkStyle ?? null;
             this._toolbar.select(p);
             this._wake();
         }

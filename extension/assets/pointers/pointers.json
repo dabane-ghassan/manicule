@@ -826,6 +826,88 @@
   }
  },
  {
+  "id": "electrode",
+  "title": "Electrode",
+  "kind": "object",
+  "ink": "#16A87A",
+  "rod": {
+   "color": "#3A4A63",
+   "line": "#1D3557",
+   "width": 0.0583
+  },
+  "top": 0.0375,
+  "poses": {
+   "point": {
+    "file": "electrode.svg",
+    "shadow": "electrode.shadow.svg",
+    "tip": [
+     0.5,
+     0.0375
+    ],
+    "wrist": [
+     0.5,
+     0.8917
+    ]
+   }
+  },
+  "fx": "trace"
+ },
+ {
+  "id": "neuron",
+  "title": "Pyramidal neuron",
+  "kind": "object",
+  "ink": "#8754F2",
+  "rod": {
+   "color": "#B985F5",
+   "line": "#3B1466",
+   "width": 0.0583
+  },
+  "top": 0.05,
+  "poses": {
+   "point": {
+    "file": "neuron.svg",
+    "shadow": "neuron.shadow.svg",
+    "tip": [
+     0.5,
+     0.05
+    ],
+    "wrist": [
+     0.5,
+     0.8917
+    ]
+   }
+  },
+  "fx": "wave",
+  "inkStyle": "spikes"
+ },
+ {
+  "id": "opto",
+  "title": "Optogenetics fibre",
+  "kind": "object",
+  "ink": "#2F86F0",
+  "rod": {
+   "color": "#2B5FA8",
+   "line": "#1B2A49",
+   "width": 0.0417
+  },
+  "top": 0.05,
+  "poses": {
+   "point": {
+    "file": "opto.svg",
+    "shadow": "opto.shadow.svg",
+    "tip": [
+     0.5,
+     0.1083
+    ],
+    "wrist": [
+     0.5,
+     0.8917
+    ]
+   }
+  },
+  "fx": "flash"
+ },
+ {
   "id": "quill",
   "title": "Quill",
   "kind": "object",
