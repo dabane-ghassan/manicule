@@ -6,6 +6,7 @@ UUID="manicule@dabane-ghassan.github.io"
 DEST="org.gnome.Shell"
 OBJECT="/io/github/dabane_ghassan/Manicule"
 IFACE="io.github.dabane_ghassan.Manicule"
+INSTALLER="https://raw.githubusercontent.com/dabane-ghassan/manicule/main/install.sh"
 
 usage() {
     cat <<USAGE
@@ -16,11 +17,13 @@ Usage: manicule <command>
   pointer <id>              switch pointer and turn it on (see: manicule list)
   sound on|off|toggle       tap sound for the current pointer
   through on|off|toggle     let clicks reach the apps underneath
+  ink keep|fade|toggle      keep drawings until erased, or let them fade
+  update                    install the latest version
   list                      pointer ids
   state                     current state as JSON
   app                       open the Manicule window (also: settings)
 
-Links work too:  xdg-open manicule://toggle   (on, off, clear, pointer/<id>, sound/<v>, through/<v>)
+Links work too:  xdg-open manicule://toggle   (on, off, clear, pointer/<id>, sound/<v>, through/<v>, ink/<v>)
 USAGE
 }
 
@@ -54,8 +57,8 @@ need() {
 }
 
 state() {
-    # GetState returns ('<json>',): strip the tuple wrapper and unescape
-    call GetState | sed -e "s/^('//" -e "s/',)\$//" -e 's/\\\\/\\/g' -e "s/\\\\'/'/g"
+    # GetState returns ('<json>',) or ("<json>",): strip the wrapper and undo its escaping
+    call GetState | sed -e "s/^(['\"]//" -e "s/['\"],)\$//" -e 's/\\\\/\\/g' -e "s/\\\\'/'/g" -e 's/\\"/"/g'
 }
 
 cmd="$1"
@@ -85,6 +88,19 @@ case "$cmd" in
         ;;
     sound)    need; call SetSound "${2:-toggle}" >/dev/null ;;
     through)  need; call SetClickThrough "${2:-toggle}" >/dev/null ;;
+    ink)
+        need
+        case "${2:-toggle}" in
+            keep|on) call SetKeepInk on >/dev/null ;;
+            fade|off) call SetKeepInk off >/dev/null ;;
+            *) call SetKeepInk toggle >/dev/null ;;
+        esac ;;
+    update)
+        if command -v curl >/dev/null 2>&1; then
+            curl -fsSL "$INSTALLER" | sh
+        else
+            wget -qO- "$INSTALLER" | sh
+        fi ;;
     state)    need; state ;;
     list)     need; state | tr '{' '\n' | sed -n 's/.*"id":"\([^"]*\)","name":"\([^"]*\)".*/\1\t\2/p' ;;
     app|settings|launch|"")

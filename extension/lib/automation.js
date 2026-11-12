@@ -17,6 +17,7 @@ const XML = `
     <method name="SetPointer"><arg type="s" direction="in" name="id"/><arg type="b" direction="out" name="ok"/></method>
     <method name="SetSound"><arg type="s" direction="in" name="value"/></method>
     <method name="SetClickThrough"><arg type="s" direction="in" name="value"/></method>
+    <method name="SetKeepInk"><arg type="s" direction="in" name="value"/></method>
     <method name="GetState"><arg type="s" direction="out" name="json"/></method>
     <signal name="StateChanged"><arg type="s" name="json"/></signal>
   </interface>
@@ -55,6 +56,10 @@ export class Automation {
         this._overlay.setClickThrough(flip(value, this._overlay.clickThrough));
     }
 
+    SetKeepInk(value) {
+        this._overlay.inkPermanent = flip(value, this._overlay.inkPermanent);
+    }
+
     GetState() {
         return JSON.stringify(this._state());
     }
@@ -66,6 +71,7 @@ export class Automation {
             pointer: o.pointer.id,
             soundOn: o.soundOn,
             clickThrough: o.clickThrough,
+            keepInk: o.inkPermanent,
             pointers: this._catalog.all.map(p => ({id: p.id, name: p.title, type: p.kind})),
         };
     }

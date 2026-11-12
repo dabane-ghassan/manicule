@@ -31,6 +31,20 @@ It works on any distro with the GNOME desktop, version 45 or later (Fedora 39+, 
 Debian 13, Arch). Nothing needs root: everything goes under `~/.local`. To remove it, run the
 same line with `sh -s -- --remove` at the end.
 
+## Update
+
+```sh
+manicule update
+```
+
+or press **Update Manicule** on the About page of the app. Both download the latest version
+and install it over the old one; your settings and your own pointers are kept. Then **log out
+and back in** once more, because GNOME only loads the new code at login.
+
+If the `manicule` command is not found (older installs, or `~/.local/bin` is not on your
+`PATH`), run the install line again; it does the same thing. To see which version you have,
+open the About page or run `manicule state`.
+
 ## Use
 
 | | |
@@ -40,33 +54,64 @@ same line with `sh -s -- --remove` at the end.
 | Click | Tap (nothing underneath gets clicked) |
 | Hold and drag | Draw on the screen |
 | Hold **Ctrl** while drawing | Add an arrowhead to the end of the line |
+| Pin button in the toolbar | Keep drawings: they stop fading, so you can write and leave it up |
+| Eraser button in the toolbar, or **Ctrl+Alt+X** | Erase every drawing |
 | Scroll | The page scrolls, and the hand strokes it along |
 | Hold **Alt** | Click for real while it is held |
 | **Ctrl+Alt+C** | Click-through: every click reaches the app, the hand stays |
-| **Ctrl+Alt+X** | Clear the drawing |
 | **Esc** | Clear everything and turn the pointer off |
 
-While the pointer is on, a small toolbar slides in at the bottom of the screen. Pick a
-pointer, change the ink colour, mute the tap sound, toggle click-through, or put the hand away.
+While the pointer is on, a small toolbar slides in at the bottom of the screen when the mouse
+gets near it. From left to right: your pinned pointers, the ink colour, the **pin** (keep
+drawings instead of fading them), the **eraser** (remove every drawing), the tap sound,
+click-through, and the button that puts the hand away.
+
+Switching the pin off again lets everything you kept fade as usual.
 
 It stays on top of fullscreen windows, so it works over slides, videos and HTML presentations.
 Keyboard keys always go to the app, so arrow keys still change slides.
 
 ### Pointers
 
-Twenty to choose from: thirteen hands (Vermilion, Parchment, Ink, Lilac, Mint, Sky, Sunflower,
-Bubblegum, Robot, Zombie, Neon, Gold, Scribe), a cat paw, a magic wand that sheds sparkles, a
-foam finger, a pencil, a quill, a laser dot with a trail, and a spotlight that dims everything
-but a circle around the mouse.
+Twenty-seven to choose from.
+
+- **Hands:** Vermilion, Parchment, Ink, Lilac, Mint, Sky, Sunflower, Bubblegum, Robot, Zombie,
+  Neon, Gold, Skeleton, Scribe.
+- **Magician's glove:** double-tap and it snaps its fingers. Every drawing vanishes in puffs of
+  smoke and stars.
+- **Boxing glove:** every tap lands with a comic-book POW.
+- **Fly swatter:** every tap leaves a splat that fades after a moment.
+- **Lobster claw:** it pinches shut while you hold the button.
+- **Rocket:** leaves a trail of exhaust as it flies.
+- **Magic wand:** sheds sparkles.
+- **Also:** cat paw, foam finger, pizza slice, pencil, quill, a laser dot with a trail, and a
+  spotlight that dims everything but a circle around the mouse.
 
 You can add your own from any PNG with a transparent background, in the Manicule window under
 Pointers. Draw it pointing straight up: the topmost point becomes the tip.
 
+### How it moves
+
+The motion is a small physical model, not a set of canned animations:
+
+- The hand is a weight fixed to the end of a flexible stick. Sweep it quickly and the hand
+  trails behind while the stick bends; stop, and it swings past and settles.
+- The more level the stick, the more the hand end sags under its own weight.
+- A tap is a strike: the hand hits the surface, rebounds slightly above its resting height and
+  settles. Hold the button and it stays pressed down.
+- Whoever is holding the stick follows your mouse with a springy delay of their own.
+
+"Sway on the stick" in the Look settings turns the bending and sagging off, and the desktop's
+"reduce animation" setting calms everything down.
+
 ### What is different from TinyHand
 
 - The hand opens and strokes the page while you scroll.
-- Tap ripples, a springy sway on the stick, and a rise-and-wave when it turns on. Each can be
-  switched off, and all of them respect the desktop's "reduce animation" setting.
+- A stick that bends, a hand with weight, and taps that bounce (see above).
+- Tap ripples and a rise-and-wave when it turns on. Each can be switched off.
+- Toolbar buttons to keep drawings and to erase them.
+- Pointers with their own tricks: the snapping magician's glove, the boxing glove, the fly
+  swatter, the lobster claw.
 - Rainbow ink, a spotlight pointer, and object pointers alongside the hands.
 - Double-tap Shift for click-through exists but is off by default, with **Ctrl+Alt+C** in its
   place. On Linux Manicule cannot see which other keys you press, so typing `( )` quickly
@@ -80,14 +125,16 @@ manicule clear
 manicule pointer wand      # see: manicule list
 manicule sound off         # on, off, toggle
 manicule through on        # click-through
+manicule ink keep          # keep drawings; "fade" lets them fade again
+manicule update            # install the latest version
 manicule state             # JSON
 ```
 
 Links work too, for launchers: `xdg-open manicule://toggle` (`on`, `off`, `clear`,
-`pointer/<id>`, `sound/<v>`, `through/<v>`).
+`pointer/<id>`, `sound/<v>`, `through/<v>`, `ink/<v>`).
 
 While it runs, the current state is mirrored to `$XDG_RUNTIME_DIR/manicule/state.json`:
-whether the pointer is on, the selected pointer, sound, click-through, and every pointer with
+whether the pointer is on, the selected pointer, sound, click-through, keep-ink, and every pointer with
 its id, name and type. The same is available over D-Bus on `org.gnome.Shell` at
 `/io/github/dabane_ghassan/Manicule`, which also emits `StateChanged`.
 

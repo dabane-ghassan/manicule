@@ -457,6 +457,83 @@
   }
  },
  {
+  "id": "magician",
+  "title": "Magician's glove",
+  "kind": "hand",
+  "ink": "#8754F2",
+  "rod": {
+   "color": "#17161B",
+   "line": "#17161B",
+   "width": 0.0542
+  },
+  "top": 0.075,
+  "poses": {
+   "point": {
+    "file": "magician-point.svg",
+    "shadow": "hand-point.shadow.svg",
+    "tip": [
+     0.4,
+     0.0875
+    ],
+    "wrist": [
+     0.5,
+     0.8917
+    ]
+   },
+   "open": {
+    "file": "magician-open.svg",
+    "shadow": "hand-open.shadow.svg",
+    "tip": [
+     0.4708,
+     0.1042
+    ],
+    "wrist": [
+     0.5,
+     0.8917
+    ]
+   }
+  },
+  "fx": "snap"
+ },
+ {
+  "id": "skeleton",
+  "title": "Skeleton",
+  "kind": "hand",
+  "ink": "#2A2924",
+  "rod": {
+   "color": "#DDD8C4",
+   "line": "#2A2924",
+   "width": 0.0542
+  },
+  "top": 0.075,
+  "poses": {
+   "point": {
+    "file": "skeleton-point.svg",
+    "shadow": "hand-point.shadow.svg",
+    "tip": [
+     0.4,
+     0.0875
+    ],
+    "wrist": [
+     0.5,
+     0.8917
+    ]
+   },
+   "open": {
+    "file": "skeleton-open.svg",
+    "shadow": "hand-open.shadow.svg",
+    "tip": [
+     0.4708,
+     0.1042
+    ],
+    "wrist": [
+     0.5,
+     0.8917
+    ]
+   }
+  }
+ },
+ {
   "id": "scribe",
   "title": "Scribe",
   "kind": "hand",
@@ -600,6 +677,153 @@
    }
   },
   "rigid": true
+ },
+ {
+  "id": "boxing",
+  "title": "Boxing glove",
+  "kind": "object",
+  "ink": "#E0322B",
+  "rod": {
+   "color": "#1B1A17",
+   "line": "#1B1A17",
+   "width": 0.0667
+  },
+  "top": 0.0792,
+  "poses": {
+   "point": {
+    "file": "boxing.svg",
+    "shadow": "boxing.shadow.svg",
+    "tip": [
+     0.5167,
+     0.0792
+    ],
+    "wrist": [
+     0.5167,
+     0.8917
+    ]
+   }
+  },
+  "fx": "pow"
+ },
+ {
+  "id": "swatter",
+  "title": "Fly swatter",
+  "kind": "object",
+  "ink": "#5C9E1E",
+  "rod": {
+   "color": "#B8E04A",
+   "line": "#1F3A12",
+   "width": 0.0667
+  },
+  "top": 0.0667,
+  "poses": {
+   "point": {
+    "file": "swatter.svg",
+    "shadow": "swatter.shadow.svg",
+    "tip": [
+     0.5,
+     0.3
+    ],
+    "wrist": [
+     0.5,
+     0.8917
+    ]
+   }
+  },
+  "rigid": true,
+  "fx": "splat"
+ },
+ {
+  "id": "lobster",
+  "title": "Lobster claw",
+  "kind": "object",
+  "ink": "#E8452F",
+  "rod": {
+   "color": "#E8452F",
+   "line": "#4A0D0D",
+   "width": 0.1083
+  },
+  "top": 0.0875,
+  "poses": {
+   "point": {
+    "file": "lobster.svg",
+    "shadow": "lobster.shadow.svg",
+    "tip": [
+     0.4917,
+     0.0875
+    ],
+    "wrist": [
+     0.5042,
+     0.8917
+    ]
+   },
+   "press": {
+    "file": "lobster-press.svg",
+    "shadow": "lobster-press.shadow.svg",
+    "tip": [
+     0.4917,
+     0.0875
+    ],
+    "wrist": [
+     0.5042,
+     0.8917
+    ]
+   }
+  }
+ },
+ {
+  "id": "rocket",
+  "title": "Rocket",
+  "kind": "object",
+  "ink": "#FF7A1A",
+  "rod": {
+   "color": "#C9CED8",
+   "line": "#8A93A3",
+   "width": 0.0375
+  },
+  "top": 0.0542,
+  "poses": {
+   "point": {
+    "file": "rocket.svg",
+    "shadow": "rocket.shadow.svg",
+    "tip": [
+     0.5,
+     0.0542
+    ],
+    "wrist": [
+     0.5,
+     0.8333
+    ]
+   }
+  },
+  "sparkle": true,
+  "trail": "flame"
+ },
+ {
+  "id": "pizza",
+  "title": "Pizza slice",
+  "kind": "object",
+  "ink": "#D8432B",
+  "rod": {
+   "color": "#D9A066",
+   "line": "#5A2E0C",
+   "width": 0.0667
+  },
+  "top": 0.0542,
+  "poses": {
+   "point": {
+    "file": "pizza.svg",
+    "shadow": "pizza.shadow.svg",
+    "tip": [
+     0.5,
+     0.0542
+    ],
+    "wrist": [
+     0.5,
+     0.8917
+    ]
+   }
+  }
  },
  {
   "id": "quill",

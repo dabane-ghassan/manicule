@@ -219,12 +219,24 @@ export class Ink {
             return;
         this._stroke = null;
         stroke.freeze();
-        const seconds = this._settings.get_double('fade-seconds');
-        if (seconds <= 0)
-            return;
         const area = stroke.area;
+        area._box = stroke._box;
+        area.connect('destroy', () => {
+            area._gone = true;
+            if (area._timer && this._timers.delete(area._timer))
+                GLib.source_remove(area._timer);
+        });
+        if (!this._settings.get_boolean('ink-permanent'))
+            this._fadeLater(area);
+    }
+
+    _fadeLater(area) {
+        const seconds = this._settings.get_double('fade-seconds');
+        if (seconds <= 0 || area._timer || area._gone)
+            return;
         const id = GLib.timeout_add(GLib.PRIORITY_DEFAULT, Math.max(500, seconds * 1000), () => {
             this._timers.delete(id);
+            area._timer = 0;
             area.ease({
                 opacity: 0,
                 duration: FADE_MS,
@@ -236,12 +248,39 @@ export class Ink {
             });
             return GLib.SOURCE_REMOVE;
         });
+        area._timer = id;
         this._timers.add(id);
-        area.connect('destroy', () => {
-            area._gone = true;
-            if (this._timers.delete(id))
-                GLib.source_remove(id);
-        });
+    }
+
+    /** Start the fade for everything that was being kept (when "keep ink" is switched off). */
+    fadeKept() {
+        for (const area of this.actor.get_children()) {
+            if (area !== this._stroke?.area)
+                this._fadeLater(area);
+        }
+    }
+
+    /** Make every drawing vanish at once; returns the middle of each, for the puffs of smoke. */
+    poof() {
+        const centres = [];
+        for (const area of this.actor.get_children()) {
+            if (area === this._stroke?.area || area._gone)
+                continue;
+            const b = area._box;
+            if (b)
+                centres.push([b.x + b.w / 2, b.y + b.h / 2]);
+            area.set_pivot_point(0.5, 0.5);
+            area.remove_all_transitions();
+            area.ease({
+                opacity: 0, scale_x: 1.08, scale_y: 1.08, duration: 260,
+                mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+                onStopped: () => {
+                    if (!area._gone)
+                        area.destroy();
+                },
+            });
+        }
+        return centres;
     }
 
     clear() {

@@ -23,6 +23,7 @@ const MENU_SCAN = 0.1;
 const SHIFT_TAP_MAX = 0.3;
 const SHIFT_DOUBLE_MAX = 0.35;
 const DRAG_START = 4;
+const SNAP_DOUBLE = 0.4;        // seconds between the two taps of a snap
 
 const INTERACT_MASKS = {
     alt: Clutter.ModifierType.MOD1_MASK,
@@ -68,6 +69,14 @@ export class Overlay {
 
     set soundOn(on) {
         this._settings.set_boolean(this._soundKey, on);
+    }
+
+    get inkPermanent() {
+        return this._settings.get_boolean('ink-permanent');
+    }
+
+    set inkPermanent(on) {
+        this._settings.set_boolean('ink-permanent', on);
     }
 
     get inkStrokes() {
@@ -146,6 +155,8 @@ export class Overlay {
         this._toolbar = new Toolbar(this._catalog, this._settings, this._path, {
             pick: id => this.pick(id),
             toggleSound: () => (this.soundOn = !this.soundOn),
+            toggleKeep: () => (this.inkPermanent = !this.inkPermanent),
+            clear: () => this.clearInk(),
             toggleClickThrough: () => this.setClickThrough(!this.clickThrough),
             exit: () => this.exit(),
         });
@@ -190,6 +201,8 @@ export class Overlay {
         this._toolbar.select(this._pointer);
         this._toolbar.setSoundOn(this.soundOn);
         this._toolbar.setClickThrough(false);
+        this._toolbar.setKeep(this.inkPermanent);
+        this._lastTap = null;
 
         this._timeline = new Clutter.Timeline({actor: this._group, duration: 1000, repeat_count: -1});
         this._timeline.connect('new-frame', () => this._tick());
@@ -337,6 +350,21 @@ export class Overlay {
                 this._ink.color = this._inkColor();
             this._toolbar?.select(this._pointer);
             break;
+        case 'ink-permanent': {
+            const keep = this.inkPermanent;
+            this._toolbar?.setKeep(keep);
+            if (this.isActive) {
+                if (!keep)
+                    this._ink.fadeKept();
+                const seconds = this._settings.get_double('fade-seconds');
+                this._toolbar.showHint(keep
+                    ? [['Ink stays', 'until you erase it']]
+                    : [['Ink fades', seconds > 0 ? `after ${seconds} s` : 'is off in settings']], 1.6);
+                this._wake();
+            }
+            this.onChanged?.();
+            break;
+        }
         case 'sound-hands':
         case 'sound-effects':
         case 'tap-sound':
@@ -397,6 +425,16 @@ export class Overlay {
         const [x, y] = ev.get_coords();
         this._down = {x, y, primary: ev.get_button() === Clutter.BUTTON_PRIMARY};
         this._ripple(x, y);
+
+        // the magician's glove: a double tap is a snap of the fingers, and every drawing vanishes
+        const t = now();
+        const last = this._lastTap;
+        this._lastTap = {x, y, t};
+        if (this._pointer.fx === 'snap' && last && t - last.t < SNAP_DOUBLE && Math.hypot(x - last.x, y - last.y) < 24) {
+            this._lastTap = null;
+            this._arm.snap();
+            this._arm.poof(this._ink.poof());
+        }
         this._wake();
         return Clutter.EVENT_STOP;
     }

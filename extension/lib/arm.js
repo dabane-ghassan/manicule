@@ -3,6 +3,15 @@
 // The stick is held from a "grip" just below the bottom edge of the screen, off to the
 // right of the cursor, and the tip of the hand always lands exactly on the cursor.
 // Everything is positioned with plain actor transforms, so a frame costs no rasterising.
+//
+// The motion is a small physical model rather than keyframes:
+//   - the hand is a weight on the end of a flexible stick. It is fixed rigidly to the stick,
+//     so when it lags behind a fast move, or sags under its own weight, the stick bends;
+//   - the lag is a damped spring driven by how fast the tip moves and how hard it accelerates,
+//     so the hand trails a sweep and overshoots when you stop;
+//   - a tap is an impulse on a second spring: the hand strikes the surface, rebounds a little
+//     above its resting height and settles;
+//   - whoever holds the stick follows the cursor with their own springy delay.
 
 import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
@@ -13,16 +22,24 @@ import {scaleFactor} from './compat.js';
 
 const GRIP_LEAN = 0.30;     // grip sits this far right of the cursor, in screen widths
 const GRIP_DEPTH = 0.12;    // and this far below the bottom edge, in screen heights
-const GRIP_TAU = 0.10;      // seconds; how lazily the grip follows
+const GRIP_OMEGA = 15;      // rad/s; how quickly the holder catches up
+const GRIP_DAMP = 0.78;     // a little under critical: the holder overshoots slightly
 const MIN_ROD = 0.05;
 const LIFT = 0.06;          // shadow distance, in screen heights
-const PRESS_TAU = 0.045;
+const PRESS_OMEGA = 36;     // the tap spring
+const PRESS_DAMP = 0.34;
+const PRESS_HIT = 30;       // impulse a click gives it
 const PRESS_SQUASH = 0.07;
 
-const WOBBLE_GAIN = 0.009;  // degrees of lean per px/s of sideways speed
-const WOBBLE_MAX = 16;
-const WOBBLE_OMEGA = 17;
-const WOBBLE_DAMP = 0.42;
+const DRAG_GAIN = 0.008;    // degrees of lag per px/s of sideways speed (air drag)
+const INERTIA_GAIN = 0.0011; // degrees of lag per px/s² of sideways acceleration (weight)
+const WOBBLE_MAX = 20;
+const WOBBLE_OMEGA = 15;    // natural frequency of hand-on-stick
+const WOBBLE_DAMP = 0.3;
+const DROOP = 4.5;          // degrees the hand sags when the stick is level
+const ROD_SEGMENTS = 14;    // straight pieces the bent stick is drawn with
+const SEG_BASE = 64;        // unscaled length of one piece, in pixels
+const FLICK_TIME = 0.26;
 
 const STROKE_RATE = 2.1;    // scroll strokes per second
 const STROKE_CONTACT = 0.62;
@@ -44,6 +61,16 @@ const easeOutBack = t => {
 };
 const smooth = t => t * t * (3 - 2 * t);
 
+/** Advance a damped spring {x, v} towards `target`, in small steps so it stays stable. */
+function spring(state, target, omega, damp, dt) {
+    const steps = Math.max(1, Math.ceil(dt / 0.006));
+    const h = dt / steps;
+    for (let i = 0; i < steps; i++) {
+        state.v += (omega * omega * (target - state.x) - 2 * damp * omega * state.v) * h;
+        state.x += state.v * h;
+    }
+}
+
 export class Arm {
     constructor(settings) {
         this._settings = settings;
@@ -54,14 +81,15 @@ export class Arm {
         this._pose = 'point';
         this._parts = [];
 
-        this._press = 0;
+        this._tap = {x: 0, v: 0};   // 0 at rest, 1 pressed onto the surface, below 0 lifted
         this.held = false;
-        this._gripX = null;
+        this._grip = null;          // {x, v}: where the stick is held, along the bottom edge
         this._gripTarget = null;
         this._last = null;          // last cursor sample {x, y, t}
         this._vel = {x: 0, y: 0};
-        this._lean = 0;
-        this._leanSpeed = 0;
+        this._acc = {x: 0, y: 0};
+        this._wrist = {x: 0, v: 0}; // degrees the hand lags behind the stick's line
+        this._flick = 0;
 
         this._scrollUntil = 0;
         this._scrollDir = {x: 0, y: -1};
@@ -95,7 +123,7 @@ export class Arm {
         const changed = !this._monitor || ['x', 'y', 'width', 'height'].some(k => this._monitor[k] !== m[k]);
         this._monitor = {x: m.x, y: m.y, width: m.width, height: m.height};
         if (changed) {
-            this._gripX = null;
+            this._grip = null;
             this._build();
         }
     }
@@ -119,6 +147,7 @@ export class Arm {
         this._parts = [];
         this._trail = [];
         this._rod = this._rodShadow = this._dot = this._hole = null;
+        this._chains = [];
         this._dim = null;
         this._sparks = 0;
     }
@@ -168,20 +197,29 @@ export class Arm {
         this._c = c;
 
         const rodW = Math.max(3, Math.round((def.rod?.width ?? 0.055) * c));
-        const rodLen = Math.round(Math.hypot(m.width, m.height) * 1.4);
-        const border = Math.max(1, Math.round(c * 6 / 240 / sf));
-        const radius = def.rigid ? 0 : Math.round(rodW / 2 / sf);
+        const border = Math.max(1, Math.round(c * 6 / 240));
         this._rodW = rodW;
-        this._rodLen = rodLen;
+        // The stick is a chain of short straight pieces laid along a curve, so it can bend.
+        const pieces = def.rigid ? 1 : ROD_SEGMENTS;
+        const chain = (color, width, opacity, shadow) => {
+            const segs = [];
+            for (let i = 0; i < pieces; i++) {
+                // Clutter scales after it rotates, which would shear a rotated piece. So each
+                // piece is a holder that only turns, around a bar that only stretches.
+                const seg = new Clutter.Actor();
+                const bar = new St.Widget({style: `background-color: ${color};`, width, height: SEG_BASE, opacity});
+                bar.set_position(-width / 2, 0);
+                bar.set_pivot_point(0.5, 0);
+                seg.add_child(bar);
+                seg._bar = bar;
+                segs.push(seg);
+                this.actor.add_child(seg);
+            }
+            this._chains.push({segs, width, shadow});
+        };
 
-        if (this._shadow) {
-            this._rodShadow = new St.Widget({
-                style: `background-color: rgba(0,0,0,0.9); border-radius: ${radius}px;`,
-                width: rodW, height: rodLen, opacity: 60,
-            });
-            this._rodShadow.set_pivot_point(0.5, 0);
-            this.actor.add_child(this._rodShadow);
-        }
+        if (this._shadow)
+            chain('#000000', rodW, 56, true);
 
         const shadows = {};
         for (const [name, pose] of Object.entries(def.poses)) {
@@ -205,12 +243,9 @@ export class Arm {
 
         const line = def.rod?.line ?? def.rod?.color ?? '#1B1A17';
         const fill = def.rod?.color ?? '#1B1A17';
-        this._rod = new St.Widget({
-            style: `background-color: ${fill}; border: ${border}px solid ${line}; border-radius: ${radius}px;`,
-            width: rodW, height: rodLen,
-        });
-        this._rod.set_pivot_point(0.5, 0);
-        this.actor.add_child(this._rod);
+        chain(line, rodW, 255, false);
+        if (fill !== line && rodW > 2 * border + 1)
+            chain(fill, rodW - 2 * border, 255, false);
 
         for (const [name, pose] of Object.entries(def.poses)) {
             const entry = this._poses[name];
@@ -276,9 +311,36 @@ export class Arm {
     // ------------------------------------------------------------ gestures
 
     press() {
-        this._press = 1;
+        this._tap.v = Math.max(this._tap.v, 0) + PRESS_HIT;
+        const {x, y} = this.tip;
+        const unit = this._monitor.height * this._size / 0.13;
         if (this._def?.sparkle)
-            this._burst(this.tip.x, this.tip.y, 7);
+            this._burst(x, y, 7);
+        if (this._def?.fx === 'pow') {
+            this._tap.v += PRESS_HIT * 0.6;
+            this._sprite('pow', x, y - unit * 0.05, unit * 0.2, {
+                from: 0.25, to: 1.15, hold: 140, fade: 260, turn: (Math.random() - 0.5) * 24,
+            });
+        } else if (this._def?.fx === 'splat') {
+            this._sprite('splat', x, y, unit * 0.1, {
+                from: 0.5, to: 1, hold: 1400, fade: 500, turn: Math.random() * 360, below: true,
+            });
+        }
+    }
+
+    /** A quick flick of the wrist with a shower of stars (the magician's snap). */
+    snap() {
+        this._flick = GLib.get_monotonic_time() / 1e6;
+        this._tap.v += PRESS_HIT * 0.5;
+        this._burst(this.tip.x, this.tip.y, 12);
+    }
+
+    /** Stars and puffs of smoke at each of the given points. */
+    poof(points) {
+        for (const [x, y] of points.slice(0, 14)) {
+            this._burst(x, y, 2, 'puff');
+            this._burst(x, y, 2);
+        }
     }
 
     /** One scroll sample. dx/dy are in the direction the user scrolls (dy > 0: down the page). */
@@ -305,8 +367,9 @@ export class Arm {
         this._enterStart = GLib.get_monotonic_time() / 1e6;
         this._waveFrom = null;
         this._last = null;
-        this._gripX = null;
-        this._lean = this._leanSpeed = 0;
+        this._grip = null;
+        this._wrist = {x: 0, v: 0};
+        this._tap = {x: 0, v: 0};
         this._stroking = false;
         if (this.isArm)
             this._showPose(this._animate && 'open' in this._poses ? 'open' : 'point');
@@ -329,15 +392,18 @@ export class Arm {
 
     /** True while something is still moving on its own, so the caller keeps drawing frames. */
     get settling() {
-        if (this._press > 0.004 || this._stroking || this._enterStart || this._leaveStart)
+        if (Math.abs(this._tap.x) > 0.004 || Math.abs(this._tap.v) > 0.05)
+            return true;
+        if (this._stroking || this._enterStart || this._leaveStart || this._flick)
             return true;
         if (this.kind === 'laser')
             return this._trailMoving;
         if (!this.isArm)
             return false;
-        if (Math.abs(this._lean) > 0.05 || Math.abs(this._leanSpeed) > 0.5)
+        if (Math.abs(this._wrist.x) > 0.05 || Math.abs(this._wrist.v) > 0.5)
             return true;
-        return this._gripX !== null && Math.abs(this._gripTarget - this._gripX) > 0.5;
+        return this._grip !== null &&
+            (Math.abs(this._gripTarget - this._grip.x) > 0.5 || Math.abs(this._grip.v) > 2);
     }
 
     // ------------------------------------------------------------ per frame
@@ -347,16 +413,26 @@ export class Arm {
         const dt = this._last ? clamp(now - this._last.t, 0.001, 0.05) : 1 / 60;
         if (this._last) {
             const a = follow(dt, 0.05);
-            this._vel.x += ((x - this._last.x) / dt - this._vel.x) * a;
-            this._vel.y += ((y - this._last.y) / dt - this._vel.y) * a;
+            const vx = this._vel.x + ((x - this._last.x) / dt - this._vel.x) * a;
+            const vy = this._vel.y + ((y - this._last.y) / dt - this._vel.y) * a;
+            const b = follow(dt, 0.06);
+            this._acc.x += ((vx - this._vel.x) / dt - this._acc.x) * b;
+            this._acc.y += ((vy - this._vel.y) / dt - this._acc.y) * b;
+            this._vel = {x: vx, y: vy};
         } else {
             this._vel = {x: 0, y: 0};
+            this._acc = {x: 0, y: 0};
         }
         this._last = {x, y, t: now};
         this.tip = {x, y};
 
-        if (!this.held && !this._stroking)
-            this._press += (0 - this._press) * follow(dt, PRESS_TAU);
+        // the tap spring; with animations off it is critically damped, so it never bounces
+        if (!this._stroking) {
+            const lively = St.Settings.get().enable_animations;
+            spring(this._tap, this.held ? 1 : 0, PRESS_OMEGA, lively ? PRESS_DAMP : 1, dt);
+            this._tap.x = clamp(this._tap.x, -0.45, 1.15);
+        }
+        this._press = this._tap.x;
 
         if (this.kind === 'laser')
             this._aimLaser(x, y, now);
@@ -439,7 +515,16 @@ export class Arm {
                 oy = this._scrollDir.y * s * reach;
                 if (before < STROKE_CONTACT && p >= STROKE_CONTACT)
                     this._press *= 0.5;
+                this._tap.x = this._press;
+                this._tap.v = 0;
             }
+        }
+
+        // a pointer with a second drawing (the lobster's closed claw) shows it while pressed
+        if (this._poses.press && !this._stroking && !this._enterStart) {
+            const want = this.held || this._press > 0.3 ? 'press' : 'point';
+            if (want !== this._pose)
+                this._showPose(want);
         }
 
         const pose = this._poses[this._pose] ?? this._poses.point;
@@ -456,8 +541,11 @@ export class Arm {
         // --- grip: below the bottom edge, trailing off to the right of the cursor
         const targetX = clamp(x + GRIP_LEAN * m.width, m.x + m.width * 0.15, m.x + m.width * 1.05);
         this._gripTarget = targetX;
-        this._gripX = this._gripX === null ? targetX : this._gripX + (targetX - this._gripX) * follow(dt, GRIP_TAU);
-        let gx = this._gripX;
+        if (this._grip === null)
+            this._grip = {x: targetX, v: 0};
+        else
+            spring(this._grip, targetX, GRIP_OMEGA, GRIP_DAMP, dt);
+        let gx = this._grip.x;
         let gy = m.y + H + GRIP_DEPTH * H;
 
         const tipOffX = (pose.tip[0] - pose.wrist[0]) * ck;
@@ -478,19 +566,30 @@ export class Arm {
         const along = Math.sqrt(Math.max(0, reach * reach - tipOffX * tipOffX));
         const theta = Math.atan2(dy, dx) - Math.atan2(-along, tipOffX);
 
-        // --- wobble: the hand leans back against sideways motion, on a damped spring
+        // --- the hand as a weight on a springy stick
         let lean = 0;
+        const ux = dx / reach;
+        const uy = dy / reach;
         if (!this._def.rigid && this._settings.get_boolean('wobble') && St.Settings.get().enable_animations) {
-            const ux = dx / reach;
-            const uy = dy / reach;
+            // sideways = across the stick. Drag makes the hand trail a steady sweep; its weight
+            // makes it lag when the sweep speeds up and swing past when it stops.
             const sideways = this._vel.x * -uy + this._vel.y * ux;
-            const target = clamp(sideways * WOBBLE_GAIN, -WOBBLE_MAX, WOBBLE_MAX);
-            const acc = WOBBLE_OMEGA * WOBBLE_OMEGA * (target - this._lean) - 2 * WOBBLE_DAMP * WOBBLE_OMEGA * this._leanSpeed;
-            this._leanSpeed += acc * dt;
-            this._lean += this._leanSpeed * dt;
-            lean = this._lean;
+            const push = this._acc.x * -uy + this._acc.y * ux;
+            const target = clamp(sideways * DRAG_GAIN + push * INERTIA_GAIN, -WOBBLE_MAX, WOBBLE_MAX);
+            spring(this._wrist, target, WOBBLE_OMEGA, WOBBLE_DAMP, dt);
+            this._wrist.x = clamp(this._wrist.x, -WOBBLE_MAX * 1.4, WOBBLE_MAX * 1.4);
+            // gravity: the more level the stick, the more the hand end sags
+            lean = this._wrist.x + DROOP * ux * rise;
         }
-        const angle = theta + (lean + wave) / DEG;
+        let flick = 0;
+        if (this._flick) {
+            const f = (now - this._flick) / FLICK_TIME;
+            if (f >= 1)
+                this._flick = 0;
+            else
+                flick = -26 * Math.sin(f * Math.PI) * (1 - f);
+        }
+        const angle = theta + (lean + wave + flick) / DEG;
 
         // --- place the hand so its tip is on (tx, ty), then find where the wrist ended up
         const cos = Math.cos(angle);
@@ -500,11 +599,17 @@ export class Arm {
         const wx = tx + wvx * cos - wvy * sin;
         const wy = ty + wvx * sin + wvy * cos;
 
-        const rodAngle = Math.atan2(gy - wy, gx - wx);
+        // --- the stick leaves the wrist along the hand's own axis and curves round to the grip,
+        // so any angle between hand and grip shows up as a bend, never as a hinge at the wrist
+        const ax = -sin;
+        const ay = cos;
         const tuck = (this._def.rigid ? 0.02 : 0.05) * ck;
-        const rx = wx - Math.cos(rodAngle) * tuck;
-        const ry = wy - Math.sin(rodAngle) * tuck;
-        const rodDeg = rodAngle * DEG - 90;
+        const sx0 = wx - ax * tuck;
+        const sy0 = wy - ay * tuck;
+        const span = Math.hypot(gx - sx0, gy - sy0);
+        const bend = this._def.rigid ? 0 : 0.5;
+        const cx = bend ? sx0 + ax * span * bend : (sx0 + gx) / 2;
+        const cy = bend ? sy0 + ay * span * bend : (sy0 + gy) / 2;
 
         const place = (icon, px, py) => {
             icon.set_pivot_point(pose.tip[0], pose.tip[1]);
@@ -513,23 +618,41 @@ export class Arm {
             icon.rotation_angle_z = angle * DEG;
         };
         place(pose.icon, tx, ty);
-        this._rod.set_position(rx - this._rodW / 2, ry);
-        this._rod.rotation_angle_z = rodDeg;
 
-        if (pose.shadow) {
-            const lift = LIFT * H * (this._size / 0.13) * (1 - 0.82 * this._press + 0.5 * lifted);
-            const sx = lift * 0.55;
-            const sy = lift;
-            place(pose.shadow, tx + sx, ty + sy);
-            this._rodShadow.set_position(rx + sx - this._rodW / 2, ry + sy);
-            this._rodShadow.rotation_angle_z = rodDeg;
+        const lift = LIFT * H * (this._size / 0.13) * Math.max(0.05, 1 - 0.82 * this._press + 0.5 * lifted);
+        const shx = lift * 0.55;
+        const shy = lift;
+        if (pose.shadow)
+            place(pose.shadow, tx + shx, ty + shy);
+
+        for (const {segs, shadow} of this._chains) {
+            const n = segs.length;
+            const offX = shadow ? shx : 0;
+            const offY = shadow ? shy : 0;
+            let px = sx0;
+            let py = sy0;
+            for (let i = 0; i < n; i++) {
+                const t = (i + 1) / n;
+                const u = 1 - t;
+                const qx = u * u * sx0 + 2 * t * u * cx + t * t * gx;
+                const qy = u * u * sy0 + 2 * t * u * cy + t * t * gy;
+                const seg = segs[i];
+                seg.set_position(px + offX, py + offY);
+                seg.rotation_angle_z = Math.atan2(qy - py, qx - px) * DEG - 90;
+                seg._bar.set_scale(1, (Math.hypot(qx - px, qy - py) + 1.5) / SEG_BASE);
+                px = qx;
+                py = qy;
+            }
         }
 
         if (this._def.sparkle && rise >= 1) {
             this._sparkFrom ??= {x, y};
             if (Math.hypot(x - this._sparkFrom.x, y - this._sparkFrom.y) > 46) {
                 this._sparkFrom = {x, y};
-                this._burst(x, y, 1);
+                if (this._def.trail)
+                    this._burst(wx, wy, 2);
+                else
+                    this._burst(x, y, 1);
             }
         }
     }
@@ -579,13 +702,50 @@ export class Arm {
 
     // ------------------------------------------------------------ sparkles
 
-    _burst(x, y, n) {
+    get _effects() {
+        return GLib.build_filenamev([GLib.path_get_dirname(this._def.dir), 'effects']);
+    }
+
+    /** One picture that pops up at (x, y), holds, and fades: the POW, the splat. */
+    _sprite(name, x, y, size, {from = 0.5, to = 1, hold = 200, fade = 300, turn = 0, below = false} = {}) {
+        const px = Math.max(8, Math.round(size));
+        const pic = this._icon(GLib.build_filenamev([this._effects, `${name}.svg`]), px);
+        pic.set_pivot_point(0.5, 0.5);
+        pic.set_position(x - px / 2, y - px / 2);
+        pic.rotation_angle_z = turn;
+        pic.connect('destroy', () => (pic._gone = true));
+        if (below)
+            this.actor.insert_child_at_index(pic, 0);
+        else
+            this.actor.add_child(pic);
+        if (!St.Settings.get().enable_animations) {
+            pic.set_scale(to, to);
+        } else {
+            pic.set_scale(from, from);
+            pic.ease({scale_x: to, scale_y: to, duration: 130, mode: Clutter.AnimationMode.EASE_OUT_BACK});
+        }
+        const id = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 130 + hold, () => {
+            pic._timer = 0;
+            if (!pic._gone) {
+                pic.ease({
+                    opacity: 0, duration: fade, mode: Clutter.AnimationMode.EASE_IN_QUAD,
+                    onStopped: () => !pic._gone && pic.destroy(),
+                });
+            }
+            return GLib.SOURCE_REMOVE;
+        });
+        pic._timer = id;
+        pic.connect('destroy', () => pic._timer && GLib.source_remove(pic._timer));
+    }
+
+    _burst(x, y, n, sprite = null) {
         if (!St.Settings.get().enable_animations)
             return;
-        const dir = GLib.build_filenamev([GLib.path_get_dirname(this._def.dir), 'effects']);
-        for (let i = 0; i < n && this._sparks < 36; i++) {
-            const size = Math.round((10 + Math.random() * 14) * scaleFactor());
-            const star = this._icon(GLib.build_filenamev([dir, 'star.svg']), size);
+        const dir = this._effects;
+        const file = `${sprite ?? this._def.trail ?? 'star'}.svg`;
+        for (let i = 0; i < n && this._sparks < 60; i++) {
+            const size = Math.round((10 + Math.random() * 14) * scaleFactor() * (sprite === 'puff' ? 2.2 : 1));
+            const star = this._icon(GLib.build_filenamev([dir, file]), size);
             star.set_pivot_point(0.5, 0.5);
             star.set_position(x - size / 2, y - size / 2);
             star.set_scale(0.4, 0.4);

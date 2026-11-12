@@ -58,6 +58,9 @@ else
     SRC="$TMP/manicule"
 fi
 
+WAS=""
+[ -f "$EXT/metadata.json" ] && WAS="$(sed -n 's/.*"version-name": *"\(.*\)".*/\1/p' "$EXT/metadata.json")"
+NOW="$(sed -n 's/.*"version-name": *"\(.*\)".*/\1/p' "$SRC/extension/metadata.json")"
 mkdir -p "$EXT" "$BIN" "$DATA/applications" "$DATA/icons/hicolor/scalable/apps"
 rm -rf "$EXT"
 mkdir -p "$EXT"
@@ -74,7 +77,13 @@ gtk-update-icon-cache -q "$DATA/icons/hicolor" >/dev/null 2>&1 || true
 gnome-extensions enable "$UUID" >/dev/null 2>&1 || true
 
 say ""
-say "Manicule is installed."
+if [ -n "$WAS" ] && [ "$WAS" != "$NOW" ]; then
+    say "Manicule updated from $WAS to $NOW."
+elif [ -n "$WAS" ]; then
+    say "Manicule $NOW reinstalled."
+else
+    say "Manicule $NOW is installed."
+fi
 if gdbus call --session --dest org.gnome.Shell --object-path /io/github/dabane_ghassan/Manicule \
         --method io.github.dabane_ghassan.Manicule.GetState >/dev/null 2>&1; then
     say "Log out and back in to load the new version."

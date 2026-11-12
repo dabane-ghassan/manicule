@@ -11,6 +11,7 @@ window underneath actually received. Screenshots land in tests/out/.
 Needs gnome-shell, gjs and GTK 4. In a container you also need a system D-Bus
 (`dbus-daemon --system --fork`) and no stale /run/systemd/seats directory.
 """
+import ast
 import json
 import os
 import pathlib
@@ -150,9 +151,8 @@ class Rig:
         out = r.stdout.strip()
         if not out.startswith("(true"):
             raise RuntimeError(f"shell eval failed: {out or r.stderr}\n  code: {code[:200]}")
-        # Eval answers (true, '<json>') in GVariant text form: undo its escaping, then parse
-        inner = out[len("(true, '"):-len("')")]
-        inner = inner.replace("\\\\", "\x00").replace("\\'", "'").replace("\x00", "\\")
+        # Eval answers (true, '<json>') in GVariant text form, quoted like a Python string
+        inner = ast.literal_eval(out[len("(true, "):-1])
         return json.loads(inner) if inner else None
 
     def t(self, call, wait=0.25):
@@ -364,6 +364,72 @@ def run(rig, r):
         rig.cmd("SetPointer", "vermilion")
         time.sleep(0.5)
 
+    print("keeping and erasing ink")
+    def draw(y=220):
+        rig.t(f"move(300, {y})")
+        rig.t("down()", 0.1)
+        rig.t(f"glide([[300, {y}], [500, {y + 40}], [700, {y}]], 200)", 0.45)
+        rig.t("up()")
+
+    def button(name):
+        rig.t("move(640, 770)", 0.6)
+        x, y = rig.overlay("(() => { const b = o._toolbar.%s; const [x, y] = b.get_transformed_position(); return [x + b.width / 2, y + b.height / 2]; })()" % name)
+        rig.t(f"move({x}, {y})")
+        rig.t("click()", 0.4)
+
+    rig.cmd("SetPointer", "vermilion")
+    time.sleep(0.6)
+    rig.js("global._t.ext().overlay._settings.set_double('fade-seconds', 0.6); 1")
+    draw()
+    r.check("a drawing is there right after drawing", rig.overlay("o.inkStrokes") == 1)
+    time.sleep(2.2)
+    r.check("and fades away on its own", rig.overlay("o.inkStrokes") == 0)
+    button("_keepButton")
+    r.check("the pin button in the toolbar turns on keeping", rig.state()["keepInk"] is True)
+    draw()
+    draw(300)
+    time.sleep(2.2)
+    r.check("kept drawings do not fade", rig.overlay("o.inkStrokes") == 2)
+    r.check("toolbar clicks never reach the window", presses(rig.probe()) == [])
+    button("_clearButton")
+    r.check("the eraser button removes everything", rig.overlay("o.inkStrokes") == 0)
+    draw()
+    button("_keepButton")
+    r.check("the pin button turns keeping off again", rig.state()["keepInk"] is False)
+    time.sleep(2.2)
+    r.check("and what was kept then fades", rig.overlay("o.inkStrokes") == 0)
+
+    print("special pointers")
+    rig.cmd("SetKeepInk", "on")
+    rig.cmd("SetPointer", "magician")
+    time.sleep(0.6)
+    draw()
+    draw(320)
+    rig.t("move(900, 300)")
+    rig.t("click()", 0.12)
+    rig.t("click()", 0.9)
+    r.check("magician's glove: a double tap snaps every drawing away", rig.overlay("o.inkStrokes") == 0)
+    rig.cmd("SetKeepInk", "off")
+    rig.cmd("SetPointer", "lobster")
+    time.sleep(0.6)
+    rig.t("move(600, 300)")
+    rig.t("down()", 0.35)
+    r.check("lobster claw: closes while the button is held", rig.overlay("o._arm._pose") == "press")
+    rig.t("up()", 0.7)
+    r.check("and opens again", rig.overlay("o._arm._pose") == "point")
+    rig.cmd("SetPointer", "boxing")
+    time.sleep(0.6)
+    rig.t("click()", 0.12)
+    rig.shot("06-boxing")
+    rig.cmd("SetPointer", "swatter")
+    time.sleep(0.6)
+    rig.t("click()", 0.2)
+    rig.t("move(700, 380)", 0.3)
+    rig.shot("06-swatter")
+    rig.js("global._t.ext().overlay._settings.reset('fade-seconds'); 1")
+    rig.cmd("SetPointer", "vermilion")
+    time.sleep(0.5)
+
     print("command line")
     cli = lambda *a: subprocess.run([str(ROOT / "bin/manicule"), *a], env=rig.env, capture_output=True, text=True)
     cli("off")
@@ -378,6 +444,10 @@ def run(rig, r):
     time.sleep(0.5)
     r.check("a manicule://pointer/<id> link switches pointer", rig.state()["pointer"] == "robot")
     r.check("an unknown pointer exits with an error", cli("pointer", "nope").returncode == 2)
+    cli("ink", "keep")
+    r.check("manicule ink keep", rig.state()["keepInk"] is True)
+    cli("manicule://ink/fade")
+    r.check("a manicule://ink/fade link", rig.state()["keepInk"] is False)
     cli("pointer", "vermilion")
     time.sleep(0.5)
 

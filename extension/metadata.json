@@ -2,7 +2,7 @@
   "uuid": "manicule@dabane-ghassan.github.io",
   "name": "Manicule",
   "description": "A little hand on a stick that points at things on your screen. Click to tap, drag to draw, scroll and the hand strokes the page. For demos, screen recordings and talks. Inspired by TinyHand for macOS.",
-  "version-name": "1.0.0",
+  "version-name": "1.1.0",
   "shell-version": ["45", "46", "47", "48", "49", "50", "51"],
   "url": "https://github.com/dabane-ghassan/manicule",
   "settings-schema": "org.gnome.shell.extensions.manicule"

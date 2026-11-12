@@ -7,7 +7,7 @@
       <summary>Selected pointer</summary>
     </key>
     <key name="pinned" type="as">
-      <default>['vermilion', 'parchment', 'lilac', 'robot', 'wand', 'laser', 'spotlight']</default>
+      <default>['vermilion', 'magician', 'robot', 'boxing', 'wand', 'laser', 'spotlight']</default>
       <summary>Pointers shown in the toolbar (up to 8)</summary>
     </key>
     <key name="custom-pointers" type="s">
@@ -54,6 +54,11 @@
       <range min="0" max="30"/>
       <default>3</default>
       <summary>Seconds before a drawing fades; 0 keeps it until cleared</summary>
+    </key>
+
+    <key name="ink-permanent" type="b">
+      <default>false</default>
+      <summary>Keep drawings until they are cleared instead of fading them</summary>
     </key>
 
     <key name="sound-hands" type="b">

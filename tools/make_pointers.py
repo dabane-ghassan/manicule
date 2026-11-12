@@ -110,6 +110,8 @@ SKINS = [
     ("zombie", "Zombie", "#A5C873", "#7FA24E", "#D3EBAE", "#22301A", "#6B4A32", "#3A2A1C", "#3E9E2E", {"zombie": True}),
     ("neon", "Neon", "#15121F", "#0C0A14", "#3C3558", "#3DF4FF", "#FF3DCB", "#3DF4FF", "#E0309A", {"neon": True}),
     ("gold", "Gold", "url(#gold)", "#D18A0A", "#FFF7C9", "#6A3F00", "#FFF4D6", "#B7791F", "#F2B705", {"gold": True}),
+    ("magician", "Magician's glove", "#FFFFFF", "#D3D8E2", "#FFFFFF", "#17161B", "#17161B", "#17161B", "#8754F2", {"magician": True, "fx": "snap"}),
+    ("skeleton", "Skeleton", "#F1EEDF", "#CBC5AE", "#FFFFFF", "#2A2924", "#2A2924", "#DDD8C4", "#2A2924", {"skeleton": True}),
     ("scribe", "Scribe", "#F3E9D2", "#D9C9A6", "#FFFDF6", "#5B3A1E", "#F3E9D2", "#5B3A1E", "#5B3A1E", {"scribe": True}),
 ]
 
@@ -173,6 +175,27 @@ def hand(skin, pose_name):
                 f'<path d="M{cx - 2.6} {cy} L{cx + 2.6} {cy}" stroke="{line}" stroke-width="2"/>'
             )
         out += '<circle cx="126" cy="156" r="8" fill="#FF4B3A" stroke="#262B33" stroke-width="3"/><circle cx="123.5" cy="153.5" r="2.6" fill="#FFD2CC"/>'
+    if extra.get("magician"):
+        # three stitched darts on the back of the glove
+        out += (
+            f'<g fill="none" stroke="{line}" stroke-width="3" stroke-linecap="round" opacity=".55">'
+            '<path d="M106 140 L106 176"/><path d="M126 138 L126 178"/><path d="M146 140 L146 176"/></g>'
+        )
+    if extra.get("skeleton"):
+        joints = ""
+        for f in pose["fingers"] + pose["knuckles"]:
+            parts = dict(q.split("=") for q in f.replace('"', "").replace("/>", "").split()[1:5])
+            x, y, w, h = (float(parts[k]) for k in ("x", "y", "width", "height"))
+            for frac_ in (0.28, 0.56):
+                yy = y + h * frac_
+                if yy < 112:
+                    joints += f'<path d="M{x + 2:g} {yy:g} Q{x + w / 2:g} {yy + 5:g} {x + w - 2:g} {yy:g}"/>'
+        out += f'<g fill="none" stroke="{line}" stroke-width="3.6" stroke-linecap="round">{joints}</g>'
+        out += (
+            f'<g fill="{line}" opacity=".8"><ellipse cx="104" cy="150" rx="5" ry="13"/>'
+            '<ellipse cx="124" cy="152" rx="5" ry="14"/><ellipse cx="144" cy="152" rx="5" ry="13"/>'
+            '<ellipse cx="162" cy="150" rx="4" ry="10"/></g>'
+        )
     if extra.get("zombie"):
         out += (
             f'<g fill="none" stroke="{line}" stroke-width="3.2" stroke-linecap="round">'
@@ -209,7 +232,11 @@ def hand(skin, pose_name):
             ) + "</g>"
             out += f'<g fill="none" stroke="{line}" stroke-width="{lw:g}" stroke-linejoin="round">{CUFF}</g>'
         else:
-            out += f'<path d="M92 207 L148 207" stroke="{line}" stroke-width="2.4" stroke-linecap="round" opacity=".28"/>'
+            if extra.get("magician"):
+                out += '<path d="M90 194 L150 194" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round"/>'
+                out += '<circle cx="120" cy="205" r="5" fill="#FFCB3D"/>'
+            else:
+                out += f'<path d="M92 207 L148 207" stroke="{line}" stroke-width="2.4" stroke-linecap="round" opacity=".28"/>'
     return svg(out, defs), shapes + [CUFF]
 
 
@@ -291,12 +318,93 @@ def quill():
     return svg(out), [vane, nib, stem], {"tip": (120, 12), "wrist": (120, 214)}
 
 
+def boxing():
+    line, red = "#3A0B0B", "#E0322B"
+    mitt = '<path d="M72 98 Q72 22 124 22 Q178 22 178 98 L178 148 Q178 172 154 172 L96 172 Q72 172 72 148 Z"/>'
+    thumb = capsule(44, 92, 40, 74, -10)
+    cuff = '<rect x="84" y="164" width="80" height="52" rx="10"/>'
+    out = merged([mitt, thumb], red, line)
+    out += '<path d="M150 40 Q168 60 166 96" fill="none" stroke="#FF8A80" stroke-width="9" stroke-linecap="round" opacity=".7"/>'
+    out += f'<path d="M84 104 Q84 150 100 160" fill="none" stroke="{line}" stroke-width="4" stroke-linecap="round" opacity=".45"/>'
+    out += f'<g fill="#FFF6E6" stroke="{line}" stroke-width="{LW:g}" stroke-linejoin="round">{cuff}</g>'
+    out += f'<g fill="none" stroke="{line}" stroke-width="3.4" stroke-linecap="round"><path d="M112 176 L136 190"/><path d="M136 176 L112 190"/><path d="M112 192 L136 206"/><path d="M136 192 L112 206"/></g>'
+    return svg(out), [mitt, thumb, cuff], {"tip": (124, 19), "wrist": (124, 214)}
+
+
+def swatter():
+    line, lime = "#1F3A12", "#B8E04A"
+    head = '<rect x="62" y="16" width="116" height="112" rx="16"/>'
+    neck = '<path d="M108 124 L132 124 L127 216 L113 216 Z"/>'
+    out = merged([head, neck], lime, line)
+    grid = "".join(f'<path d="M{x} 26 L{x} 118"/>' for x in range(82, 170, 19))
+    grid += "".join(f'<path d="M72 {y} L168 {y}"/>' for y in range(36, 118, 19))
+    out += f'<g fill="none" stroke="{line}" stroke-width="3" opacity=".5">{grid}</g>'
+    out += '<path d="M74 30 Q76 24 86 24" fill="none" stroke="#F0FFC0" stroke-width="5" stroke-linecap="round"/>'
+    return svg(out), [head, neck], {"tip": (120, 72), "top": 16, "wrist": (120, 214)}
+
+
+def lobster():
+    line, red, dark = "#4A0D0D", "#E8452F", "#B92A1B"
+    big = '<path d="M80 152 Q50 98 82 46 Q98 22 118 24 Q110 60 120 92 Q128 122 124 152 Z"/>'
+    small_d = "M122 152 Q128 112 123 84 Q121 54 133 34 Q160 60 166 100 Q168 132 160 152 Z"
+    palm = '<ellipse cx="121" cy="160" rx="47" ry="32"/>'
+    arm = '<rect x="97" y="176" width="48" height="40" rx="13"/>'
+
+    def pose(angle):
+        small = f'<path d="{small_d}" transform="rotate({angle} 142 152)"/>'
+        shapes = [arm, small, big, palm]
+        out = merged(shapes, red, line)
+        out += f'<path d="M88 140 Q70 100 90 60" fill="none" stroke="#FF9A85" stroke-width="7" stroke-linecap="round" opacity=".7"/>'
+        out += f'<g fill="{dark}" opacity=".8"><circle cx="104" cy="160" r="5"/><circle cx="124" cy="168" r="5"/><circle cx="143" cy="158" r="5"/></g>'
+        out += f'<path d="M100 196 L142 196" stroke="{line}" stroke-width="3.4" stroke-linecap="round" opacity=".45"/>'
+        return svg(out), shapes
+
+    art, shapes = pose(20)
+    return art, shapes, {"tip": (118, 21), "wrist": (121, 214), "press": pose(-3)}
+
+
+def rocket():
+    line = "#1D2433"
+    body = '<path d="M120 16 Q160 60 160 122 L160 168 L80 168 L80 122 Q80 60 120 16 Z"/>'
+    fin_l = '<path d="M82 128 L50 176 L82 170 Z"/>'
+    fin_r = '<path d="M158 128 L190 176 L158 170 Z"/>'
+    nozzle = '<path d="M96 166 L144 166 L152 196 L88 196 Z"/>'
+    out = f'<g fill="#E0322B" stroke="{line}" stroke-width="{LW:g}" stroke-linejoin="round">{fin_l}{fin_r}</g>'
+    out += f'<g fill="#5B6577" stroke="{line}" stroke-width="{LW:g}" stroke-linejoin="round">{nozzle}</g>'
+    out += f'<g fill="#F4F6FA" stroke="{line}" stroke-width="{LW:g}" stroke-linejoin="round">{body}</g>'
+    out += '<path d="M120 16 Q142 40 152 76 L88 76 Q98 40 120 16 Z" fill="#E0322B"/>'
+    out += f'<path d="M88 76 L152 76" stroke="{line}" stroke-width="4"/>'
+    out += f'<g fill="none" stroke="{line}" stroke-width="{LW:g}" stroke-linejoin="round">{body}</g>'
+    out += f'<circle cx="120" cy="112" r="17" fill="#6CB6F5" stroke="{line}" stroke-width="5"/><path d="M110 106 Q114 100 122 100" fill="none" stroke="#DDF0FF" stroke-width="4" stroke-linecap="round"/>'
+    out += '<path d="M98 196 Q104 222 120 236 Q136 222 142 196 Z" fill="#FFB02E" stroke="#B04A00" stroke-width="4" stroke-linejoin="round"/><path d="M108 198 Q112 214 120 222 Q128 214 132 198 Z" fill="#FFE98A"/>'
+    return svg(out), [body, fin_l, fin_r, nozzle], {"tip": (120, 13), "wrist": (120, 200)}
+
+
+def pizza():
+    line = "#5A2E0C"
+    slice_ = '<path d="M120 16 L182 178 Q120 204 58 178 Z"/>'
+    crust = '<path d="M54 172 Q120 200 186 172 L190 196 Q120 226 50 196 Z"/>'
+    out = f'<g fill="#FFC83D" stroke="{line}" stroke-width="{LW:g}" stroke-linejoin="round">{slice_}</g>'
+    out += '<path d="M120 40 L160 150 Q120 164 80 150 Z" fill="#FFDD6E" opacity=".7"/>'
+    for cx, cy, r in ((120, 78, 11), (100, 132, 13), (142, 126, 12), (122, 160, 9)):
+        out += f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="#D8432B" stroke="{line}" stroke-width="3.4"/>'
+    out += '<g fill="#3F8F3A"><rect x="126" y="100" width="12" height="5" rx="2.5" transform="rotate(30 132 102)"/><rect x="96" y="104" width="12" height="5" rx="2.5" transform="rotate(-24 102 106)"/></g>'
+    out += f'<g fill="#E0A458" stroke="{line}" stroke-width="{LW:g}" stroke-linejoin="round">{crust}</g>'
+    out += '<path d="M70 190 Q120 210 170 190" fill="none" stroke="#F6CE94" stroke-width="5" stroke-linecap="round" opacity=".8"/>'
+    return svg(out), [slice_, crust], {"tip": (120, 13), "wrist": (120, 214)}
+
+
 OBJECTS = [
     # id, title, builder, rod colour, rod outline, rod width (canvas units), ink, extras
     ("paw", "Cat paw", paw, "#F2A65A", "#3A2416", 98, "#F2A65A", {"rigid": True}),
     ("wand", "Magic wand", wand, "#1B1A17", "#1B1A17", 24, "#F2B705", {"sparkle": True}),
     ("foam", "Foam finger", foam, "#E9D3A8", "#5B4423", 20, "#2F6FED", {}),
     ("pencil", "Pencil", pencil, "#FFCB3D", "#3D2A00", 58, "#2B2B33", {"rigid": True}),
+    ("boxing", "Boxing glove", boxing, "#1B1A17", "#1B1A17", 16, "#E0322B", {"fx": "pow"}),
+    ("swatter", "Fly swatter", swatter, "#B8E04A", "#1F3A12", 16, "#5C9E1E", {"fx": "splat", "rigid": True}),
+    ("lobster", "Lobster claw", lobster, "#E8452F", "#4A0D0D", 26, "#E8452F", {}),
+    ("rocket", "Rocket", rocket, "#C9CED8", "#8A93A3", 9, "#FF7A1A", {"sparkle": True, "trail": "flame"}),
+    ("pizza", "Pizza slice", pizza, "#D9A066", "#5A2E0C", 16, "#D8432B", {}),
     ("quill", "Quill", quill, "#E8DCC0", "#3A2A1C", 14, "#1B1A17", {"rigid": True}),
 ]
 
@@ -342,20 +450,27 @@ def main():
             "top": round(18 / CANVAS, 4),
             "poses": poses,
             **({"glow": True} if extra.get("neon") else {}),
+            **({"fx": extra["fx"]} if extra.get("fx") else {}),
         })
 
     for oid, title, build, rod, rod_line, rod_w, ink, extra in OBJECTS:
         art, shapes, geo = build()
         (OUT / f"{oid}.svg").write_text(art)
         (OUT / f"{oid}.shadow.svg").write_text(shadow_svg(shapes))
+        point = {"file": f"{oid}.svg", "shadow": f"{oid}.shadow.svg",
+                 "tip": frac(geo["tip"]), "wrist": frac(geo["wrist"])}
+        poses = {"point": point}
+        if "press" in geo:      # a second drawing shown while the button is held
+            art2, shapes2 = geo["press"]
+            (OUT / f"{oid}-press.svg").write_text(art2)
+            (OUT / f"{oid}-press.shadow.svg").write_text(shadow_svg(shapes2))
+            poses["press"] = {**point, "file": f"{oid}-press.svg", "shadow": f"{oid}-press.shadow.svg"}
         manifest.append({
             "id": oid, "title": title, "kind": "object", "ink": ink,
             "rod": {"color": rod, "line": rod_line, "width": round(rod_w / CANVAS, 4)},
-            "top": round(geo["tip"][1] / CANVAS, 4),
-            "poses": {"point": {"file": f"{oid}.svg", "shadow": f"{oid}.shadow.svg",
-                                "tip": frac(geo["tip"]), "wrist": frac(geo["wrist"])}},
-            **({"sparkle": True} if extra.get("sparkle") else {}),
-            **({"rigid": True} if extra.get("rigid") else {}),
+            "top": round(geo.get("top", geo["tip"][1]) / CANVAS, 4),
+            "poses": poses,
+            **{k: extra[k] for k in ("sparkle", "rigid", "fx", "trail") if extra.get(k)},
         })
 
     for kind, title, ink in (("laser", "Laser dot", "#FF2A1F"), ("spotlight", "Spotlight", "#FFCB3D")):
@@ -376,6 +491,39 @@ def main():
         '<stop offset="1" stop-color="#FF2A1F" stop-opacity="0"/></radialGradient></defs>'
         '<circle cx="45" cy="45" r="45" fill="url(#g)"/><circle cx="45" cy="45" r="10" fill="#FF2A1F"/>'
         '<circle cx="45" cy="45" r="4.6" fill="#FFE1DC"/></svg>\n')
+    import math
+    import random
+    rnd = random.Random(3)
+    burst = " ".join(
+        f"{'M' if i == 0 else 'L'}{150 + (140 if i % 2 == 0 else 86 + rnd.uniform(-8, 8)) * math.cos(i * math.pi / 11 - 0.2):.0f} "
+        f"{110 + (100 if i % 2 == 0 else 60 + rnd.uniform(-6, 6)) * math.sin(i * math.pi / 11 - 0.2):.0f}"
+        for i in range(22)) + " Z"
+    (fx / "pow.svg").write_text(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 220" width="300" height="220">'
+        f'<path d="{burst}" fill="#17161B" transform="translate(6 7)"/>'
+        f'<path d="{burst}" fill="#FFD93B" stroke="#17161B" stroke-width="7" stroke-linejoin="round"/>'
+        '<text x="150" y="134" text-anchor="middle" font-family="DejaVu Sans, Cantarell, Arial, sans-serif" font-weight="900" '
+        'font-size="68" font-style="italic" fill="#E0322B" stroke="#17161B" stroke-width="5" paint-order="stroke" '
+        'transform="rotate(-8 150 110)">POW!</text></svg>\n')
+    drops = "".join(
+        f'<circle cx="{100 + 84 * math.cos(a):.0f}" cy="{100 + 84 * math.sin(a):.0f}" r="{r}"/>'
+        for a, r in ((0.3, 8), (1.4, 5), (2.3, 9), (3.5, 6), (4.4, 10), (5.5, 5)))
+    blob = " ".join(
+        f"{'M' if i == 0 else 'L'}{100 + (62 if i % 2 == 0 else 40) * math.cos(i * math.pi / 7):.0f} "
+        f"{100 + (62 if i % 2 == 0 else 40) * math.sin(i * math.pi / 7):.0f}" for i in range(14)) + " Z"
+    (fx / "splat.svg").write_text(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">'
+        f'<g fill="#7BC043" stroke="#7BC043" stroke-width="22" stroke-linejoin="round"><path d="{blob}"/></g>'
+        f'<g fill="#7BC043">{drops}</g>'
+        '<ellipse cx="84" cy="82" rx="16" ry="9" fill="#C6F08C" transform="rotate(-30 84 82)"/>'
+        '<g fill="#17161B"><ellipse cx="100" cy="104" rx="9" ry="12"/><path d="M92 96 Q76 84 70 96 Q80 104 92 102 Z M108 96 Q124 84 130 96 Q120 104 108 102 Z" fill="#17161B" opacity=".55"/></g>'
+        '</svg>\n')
+    (fx / "flame.svg").write_text(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">'
+        '<circle cx="24" cy="24" r="20" fill="#FF8A1F" opacity=".9"/><circle cx="24" cy="24" r="12" fill="#FFD95A"/></svg>\n')
+    (fx / "puff.svg").write_text(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">'
+        '<g fill="#FFFFFF" opacity=".92"><circle cx="18" cy="26" r="12"/><circle cx="30" cy="22" r="13"/><circle cx="27" cy="33" r="10"/></g></svg>\n')
     (fx / "star.svg").write_text(
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">'
         '<path d="M24 3 L29 19 L45 24 L29 29 L24 45 L19 29 L3 24 L19 19 Z" fill="#FFD95A" stroke="#FFF7D6" stroke-width="2" stroke-linejoin="round"/></svg>\n')

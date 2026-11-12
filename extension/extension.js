@@ -96,6 +96,10 @@ class Indicator extends PanelMenu.Button {
         this._sound.connect('toggled', (_i, on) => (overlay.soundOn = on));
         this.menu.addMenuItem(this._sound);
 
+        this._keep = new PopupMenu.PopupSwitchMenuItem('Keep drawings', false);
+        this._keep.connect('toggled', (_i, on) => (overlay.inkPermanent = on));
+        this.menu.addMenuItem(this._keep);
+
         this._pointers = new PopupMenu.PopupSubMenuMenuItem('Pointer style', true);
         this.menu.addMenuItem(this._pointers);
         this._pointerItems = new Map();
@@ -130,6 +134,7 @@ class Indicator extends PanelMenu.Button {
         this._through.setToggleState(overlay.clickThrough);
         this._through.setSensitive(overlay.isActive);
         this._sound.setToggleState(overlay.soundOn);
+        this._keep.setToggleState(overlay.inkPermanent);
         this._pointers.icon.gicon = catalog.icon(overlay.pointer);
         for (const [id, item] of this._pointerItems)
             item.setOrnament(id === overlay.pointer.id ? PopupMenu.Ornament.DOT : PopupMenu.Ornament.NONE);

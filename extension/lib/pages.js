@@ -20,7 +20,7 @@ const SHORTCUTS = [
 ];
 const RESET_KEYS = [
     'pointer', 'pinned', 'pointer-size', 'show-shadow', 'tap-ripple', 'scroll-gesture', 'entrance-animation',
-    'wobble', 'ink-color', 'fade-seconds', 'sound-hands', 'sound-effects', 'tap-sound', 'interact-key',
+    'wobble', 'ink-color', 'fade-seconds', 'ink-permanent', 'sound-hands', 'sound-effects', 'tap-sound', 'interact-key',
     'interact-keeps-hand', 'double-shift-click-through', 'show-toolbar', 'show-ink-button', 'hint-shown',
     'toggle-shortcut', 'clear-shortcut', 'click-through-shortcut',
 ];
@@ -346,6 +346,8 @@ export class Pages {
         });
         settings.bind('fade-seconds', fade, 'value', Gio.SettingsBindFlags.DEFAULT);
         ink.add(fade);
+        ink.add(switchRow(settings, 'ink-permanent', 'Keep drawings',
+            'Do not fade them. Erase with the toolbar button or the shortcut. Also the pin in the toolbar.'));
         page.add(ink);
 
         const bar = new Adw.PreferencesGroup({title: 'Toolbar'});
@@ -506,6 +508,43 @@ export class Pages {
             'https://tinyhand.app'));
         links.add(link('License', 'MIT', 'https://github.com/dabane-ghassan/manicule/blob/main/LICENSE'));
         page.add(links);
+
+        const update = new Adw.PreferencesGroup();
+        const updateRow = new Adw.ActionRow({
+            title: 'Update Manicule',
+            subtitle: 'Downloads and installs the latest version. Same as running “manicule update”.',
+            activatable: true,
+        });
+        const spinner = new Gtk.Spinner({visible: false});
+        updateRow.add_suffix(spinner);
+        updateRow.connect('activated', () => {
+            if (spinner.visible)
+                return;
+            spinner.visible = true;
+            spinner.start();
+            const done = message => {
+                spinner.stop();
+                spinner.visible = false;
+                host.toast(new Adw.Toast({title: message, timeout: 8}));
+            };
+            try {
+                const url = 'https://raw.githubusercontent.com/dabane-ghassan/manicule/main/install.sh';
+                const proc = Gio.Subprocess.new(['sh', '-c', `curl -fsSL ${url} | sh`],
+                    Gio.SubprocessFlags.STDOUT_SILENCE | Gio.SubprocessFlags.STDERR_SILENCE);
+                proc.wait_check_async(null, (_p, result) => {
+                    try {
+                        proc.wait_check_finish(result);
+                        done('Updated. Log out and back in to start using the new version.');
+                    } catch (_e) {
+                        done('The update did not finish. Check your connection and try again.');
+                    }
+                });
+            } catch (_e) {
+                done('Could not start the update.');
+            }
+        });
+        update.add(updateRow);
+        page.add(update);
 
         const danger = new Adw.PreferencesGroup();
         const reset = new Adw.ActionRow({title: 'Reset all settings', activatable: true});

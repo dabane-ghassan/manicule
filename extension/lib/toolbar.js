@@ -34,6 +34,17 @@ export class Toolbar {
         this._inkButton = this._button(this._inkDot, 'Ink colour', () => this._setInkOpen(!this._inkOpen));
         this._bar.add_child(this._inkButton);
 
+        this._keepButton = this._button(
+            new St.Icon({gicon: this._fileIcon('keep-symbolic.svg'), style_class: 'manicule-tool-icon'}),
+            'Keep drawings (do not fade)', () => actions.toggleKeep());
+        this._bar.add_child(this._keepButton);
+
+        this._clearButton = this._button(
+            new St.Icon({gicon: this._fileIcon('eraser-symbolic.svg'), style_class: 'manicule-tool-icon'}),
+            'Erase all drawings', () => actions.clear());
+        this._bar.add_child(this._clearButton);
+        this._bar.add_child(new St.Widget({style_class: 'manicule-toolbar-sep', y_align: Clutter.ActorAlign.CENTER}));
+
         this._soundIcon = new St.Icon({icon_name: 'audio-volume-high-symbolic', style_class: 'manicule-tool-icon'});
         this._soundButton = this._button(this._soundIcon, 'Tap sound', () => actions.toggleSound());
         this._bar.add_child(this._soundButton);
@@ -125,6 +136,13 @@ export class Toolbar {
 
     setSoundOn(on) {
         this._soundIcon.icon_name = on ? 'audio-volume-high-symbolic' : 'audio-volume-muted-symbolic';
+    }
+
+    setKeep(on) {
+        if (on)
+            this._keepButton.add_style_pseudo_class('checked');
+        else
+            this._keepButton.remove_style_pseudo_class('checked');
     }
 
     setClickThrough(on) {
