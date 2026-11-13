@@ -503,9 +503,6 @@ export class Pages {
         };
         links.add(link('Website', 'dabane-ghassan.github.io/manicule', 'https://dabane-ghassan.github.io/manicule/'));
         links.add(link('Source code', 'github.com/dabane-ghassan/manicule', 'https://github.com/dabane-ghassan/manicule'));
-        links.add(link('Inspired by TinyHand',
-            'The original hand on a stick, for macOS, by Kamran Ahmed. Manicule is an independent Linux take on it.',
-            'https://tinyhand.app'));
         links.add(link('License', 'MIT', 'https://github.com/dabane-ghassan/manicule/blob/main/LICENSE'));
         page.add(links);
 

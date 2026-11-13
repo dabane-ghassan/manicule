@@ -27,8 +27,6 @@ const CSS = `
 .manicule-nav row { border-radius: 12px; padding: 10px 12px; margin: 2px 0; color: alpha(#F4EDE0, 0.72); font-weight: 600; }
 .manicule-nav row:hover { background: alpha(#F4EDE0, 0.08); }
 .manicule-nav row:selected { background: alpha(#F4EDE0, 0.14); color: #F4EDE0; }
-.manicule-credit { color: alpha(#F4EDE0, 0.5); font-size: 0.8em; margin: 14px 18px 16px; }
-.manicule-credit link, .manicule-credit a { color: alpha(#F4EDE0, 0.8); }
 
 .manicule-stage { border-radius: 26px; }
 .manicule-state { font-weight: 800; font-size: 1.9em; letter-spacing: -0.02em; }
@@ -262,14 +260,8 @@ export function buildAppWindow(app, path, version, settings) {
     brand.append(new Gtk.Label({label: 'Manicule', css_classes: ['manicule-brand']}));
     const sideHeader = new Adw.HeaderBar({title_widget: new Gtk.Box(), show_title: false});
     sideHeader.pack_start(brand);
-    const credit = new Gtk.Label({
-        label: 'Inspired by <a href="https://tinyhand.app">TinyHand</a> for macOS.',
-        use_markup: true, xalign: 0, wrap: true, css_classes: ['manicule-credit'],
-    });
     const sideBody = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL});
     sideBody.append(nav);
-    sideBody.append(new Gtk.Box({vexpand: true}));
-    sideBody.append(credit);
     const side = new Adw.ToolbarView({content: sideBody, css_classes: ['manicule-side']});
     side.add_top_bar(sideHeader);
 

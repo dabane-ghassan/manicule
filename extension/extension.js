@@ -1,7 +1,5 @@
 // Manicule: a little hand on a stick that points at things on your screen.
 // https://github.com/dabane-ghassan/manicule
-//
-// A Linux take on TinyHand for macOS by Kamran Ahmed (https://tinyhand.app), which inspired it.
 
 import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';

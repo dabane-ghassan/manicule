@@ -13,11 +13,6 @@ page along when you scroll. Made for demos, screen recordings and talks, on the 
 
 **[Website with a live demo](https://dabane-ghassan.github.io/manicule/)**
 
-> Manicule is inspired by [TinyHand](https://tinyhand.app), the original hand on a stick for
-> macOS, made by [Kamran Ahmed](https://github.com/nilbuild/tinyhand). The idea, and the way it
-> behaves, are his; thank you. Manicule is an independent take on it for Linux: the code, the
-> drawings and the sounds here are written from scratch.
-
 ## Install
 
 ```sh
@@ -110,18 +105,10 @@ The motion is a small physical model, not a set of canned animations:
 "Sway on the stick" in the Look settings turns the bending and sagging off, and the desktop's
 "reduce animation" setting calms everything down.
 
-### What is different from TinyHand
+### Click-through by double-tapping Shift
 
-- The hand opens and strokes the page while you scroll.
-- A stick that bends, a hand with weight, and taps that bounce (see above).
-- Tap ripples and a rise-and-wave when it turns on. Each can be switched off.
-- Toolbar buttons to keep drawings and to erase them.
-- Pointers with their own tricks: the snapping magician's glove, the boxing glove, the fly
-  swatter, the lobster claw.
-- Rainbow ink, a spotlight pointer, and object pointers alongside the hands.
-- Double-tap Shift for click-through exists but is off by default, with **Ctrl+Alt+C** in its
-  place. On Linux Manicule cannot see which other keys you press, so typing `( )` quickly
-  could look like a double tap.
+It exists, in Controls, but it is off by default, with **Ctrl+Alt+C** in its place. Manicule
+cannot see which other keys you press, so typing `( )` quickly could look like a double tap.
 
 ## Automation
 
